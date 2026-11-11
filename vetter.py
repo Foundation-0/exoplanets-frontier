@@ -92,7 +92,7 @@ def vet_signal(tic, pk, t, f, fe, sec, lane, sap=None, mdx=None, mdy=None, crowd
             "Tmag": round(tmag, 2), "Teq_K": round(teq, 0), "TSM": round(float(tsm), 1), "FPP": round(fpp, 5), "NFPP": round(nfpp, 5),
             "passed": ok, "tier": tier, "vetoes": ";".join(vet) if vet else "CLEAN"}
 
-defde blind_check_sector(tic, tier, p_d, t0_bjd, pred_ppm, dur_h, sec, t, f, mdx=None, mdy=None):
+def blind_check_sector(tic, tier, p_d, t0_bjd, pred_ppm, dur_h, sec, t, f, mdx=None, mdy=None):
     t0 = t0_bjd - BTJD0 if t0_bjd > 2400000 else t0_bjd; dur = max(dur_h / 24.0, 0.025)
     if len(t) < 50: return {"tic": tic, "tier": tier, "sector": sec, "P_d": round(p_d, 6), "pred_ppm": round(pred_ppm, 1), "obs_ppm": 0.0, "err_ppm": 0.0, "snr": 0.0, "dt_min": 0.0, "cent_sig": 0.0, "n_cov": 0, "verdict": "NO_DATA"}
     preds = [t0 + k * p_d for k in range(math.ceil((float(t[0]) - t0) / p_d), math.floor((float(t[-1]) - t0) / p_d) + 1)]
