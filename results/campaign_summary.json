@@ -1,19 +1,22 @@
 {
-  "utc": "2026-11-11T19:39:13Z",
-  "sec_s": 182.1,
+  "utc": "2026-11-11T20:23:00Z",
+  "sec_s": 870.8,
   "s_max": 107,
   "new_sectors": [
     106,
     107
   ],
-  "blind_pairs": 3,
+  "blind_pairs": 39,
   "blind_counts": {
-    "LOW_SNR_INCONCLUSIVE": 2,
-    "MARGINAL_RECOVERY": 1
+    "CONFIRMED_ON_SCHEDULE": 22,
+    "LOW_SNR_INCONCLUSIVE": 9,
+    "MARGINAL_RECOVERY": 5,
+    "DATA_GAP": 2,
+    "TIMING_OFFSET_TTV": 1
   },
-  "unpromoted_tce_pool_total": 15,
-  "tce_stacked": 15,
-  "usp_hosts": 3,
-  "triggers_vetted": 11,
+  "unpromoted_tce_pool_total": 7,
+  "tce_stacked": 7,
+  "usp_hosts": 28,
+  "triggers_vetted": 4,
   "new_passed": 0
 }
