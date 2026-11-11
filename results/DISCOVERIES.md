@@ -1,10 +1,10 @@
-# TESS Sectors 1-107 Verification and Discovery Ledger
+# TESS Sectors 1-106 Verification and Discovery Ledger
 
-Empirical measurements from NASA STScI MAST 2-minute SPOC light curves and Target Pixel Files (`2026-11-11T21:41:40Z`, `1616.7 s`).
+Empirical measurements from NASA STScI MAST 2-minute SPOC light curves and Target Pixel Files (`2026-11-11T23:51:07Z`, `2764.0 s`).
 
-- **Highest MAST SPOC sector indexed**: `S107` (new sectors tested: `[106, 107]`)
+- **Highest MAST SPOC sector indexed**: `S106` (new sectors tested: `[106]`)
 - **Out-of-sample (`v3.0`, S106/S107) pairs tested**: `39` -> `{'CONFIRMED_ON_SCHEDULE': 22, 'LOW_SNR_INCONCLUSIVE': 9, 'MARGINAL_RECOVERY': 5, 'DATA_GAP': 2, 'TIMING_OFFSET_TTV': 1}`
-- **Uncatalogued S106-S107 dwarf signals found / stacked across S1-S107**: `127` found, `127` stacked
+- **Uncatalogued S106-S107 dwarf signals found / stacked across S1-S106**: `128` found, `128` stacked
 - **Hosts searched for 0.155-0.50 d USP siblings**: `28` | **Passed all 8 gates + TPF**: `0`
 
 ## 1. Out-of-Sample Blind Verification (Sectors 106-107)
