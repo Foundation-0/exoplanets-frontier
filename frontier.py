@@ -84,5 +84,5 @@ if __name__ == "__main__":
     args = ap.parse_args()
     if args.self_test:
         import campaigns, deep_search, mast_data  # noqa: F401
-        unittest.main(argv=[___file___], verbosity=2)
+        unittest.main(argv=[__file___], verbosity=2)
     else: print(json.dumps(run_live(args.out_dir, args.max_tce, args.max_usp), indent=2))
