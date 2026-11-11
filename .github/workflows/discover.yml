@@ -1,10 +1,6 @@
 name: Run TESS S106-S107 Discovery Campaign
-
 on:
-  push:name: Run TESS S106-S107 Discovery Campaign
-
-on:
-  push:
+push:
     branches: [main]
     paths:
       - "bls_search.py"
@@ -54,61 +50,6 @@ jobs:
       - name: Commit campaign results and figures
         run: |
           rm -rf _eumemic .venv
-          git config user.name "orda-aska"
-          git config user.email "orda-aska@users.noreply.github.com"
-          git add results/
-          if ! git diff --cached --quiet; then
-            git commit -m "Update live TESS Sectors 106-107 verification and discovery results [skip ci]"
-            git pull --rebase origin main
-            git push origin HEAD:main
-          fi
-    branches: [main]
-    paths:
-      - "bls_search.py"
-      - "vetter.py"
-      - "mast_data.py"
-      - "campaigns.py"
-      - "ledger.py"
-      - "frontier.py"
-      - ".github/workflows/discover.yml"
-  workflow_dispatch:
-    inputs:
-      max_tce:
-        description: "Max unpromoted S106-S107 TCEs to stack across S1-S107"
-        required: false
-        default: "36"
-      max_usp:
-        description: "Max candidate hosts to search for 0.155-0.50 d USP siblings"
-        required: false
-        default: "28"
-
-permissions:
-  contents: write
-
-jobs:
-  discover:
-    runs-on: ubuntu-latest
-    timeout-minutes: 25
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/checkout@v4
-        with:
-          repository: eumemic/exoplanets
-          path: _eumemic
-      - uses: astral-sh/setup-uv@v5
-        with:
-          python-version: "3.12"
-      - name: Install astronomy dependencies
-        run: uv pip install --system numpy scipy pandas matplotlib astropy astroquery requests
-      - name: Run self-tests
-        run: python frontier.py --self-test
-      - name: Execute live MAST TESS Sectors 1-107 campaign
-        run: |
-          python frontier.py --out-dir results --max-tce "${{ github.event.inputs.max_tce || '36' }}" --max-usp "${{ github.event.inputs.max_usp || '28' }}"
-          if [ -f results/DISCOVERIES.md ]; then cat results/DISCOVERIES.md >> "$GITHUB_STEP_SUMMARY"; fi
-      - name: Commit campaign results and figures
-        run: |
-          rm -rf _eumemic
           git config user.name "orda-aska"
           git config user.email "orda-aska@users.noreply.github.com"
           git add results/
