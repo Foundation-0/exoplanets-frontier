@@ -1,0 +1,19 @@
+{
+  "utc": "2026-11-11T19:39:13Z",
+  "sec_s": 182.1,
+  "s_max": 107,
+  "new_sectors": [
+    106,
+    107
+  ],
+  "blind_pairs": 3,
+  "blind_counts": {
+    "LOW_SNR_INCONCLUSIVE": 2,
+    "MARGINAL_RECOVERY": 1
+  },
+  "unpromoted_tce_pool_total": 15,
+  "tce_stacked": 15,
+  "usp_hosts": 3,
+  "triggers_vetted": 11,
+  "new_passed": 0
+}
