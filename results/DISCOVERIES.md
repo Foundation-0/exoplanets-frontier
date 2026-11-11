@@ -1,10 +1,10 @@
 # TESS Sectors 1-107 Verification and Discovery Ledger
 
-Empirical measurements from NASA STScI MAST 2-minute SPOC light curves and Target Pixel Files (`2026-11-11T20:23:00Z`, `870.8 s`).
+Empirical measurements from NASA STScI MAST 2-minute SPOC light curves and Target Pixel Files (`2026-11-11T21:41:40Z`, `1616.7 s`).
 
 - **Highest MAST SPOC sector indexed**: `S107` (new sectors tested: `[106, 107]`)
 - **Out-of-sample (`v3.0`, S106/S107) pairs tested**: `39` -> `{'CONFIRMED_ON_SCHEDULE': 22, 'LOW_SNR_INCONCLUSIVE': 9, 'MARGINAL_RECOVERY': 5, 'DATA_GAP': 2, 'TIMING_OFFSET_TTV': 1}`
-- **Uncatalogued S106-S107 dwarf signals found / stacked across S1-S107**: `7` found, `7` stacked
+- **Uncatalogued S106-S107 dwarf signals found / stacked across S1-S107**: `127` found, `127` stacked
 - **Hosts searched for 0.155-0.50 d USP siblings**: `28` | **Passed all 8 gates + TPF**: `0`
 
 ## 1. Out-of-Sample Blind Verification (Sectors 106-107)
@@ -48,7 +48,22 @@ Zero triggers in this batch passed all 8 gates simultaneously; see audit table b
 
 | TIC | Lane | Period (d) | Depth (ppm) | Rp (Re) | MES | Passed | Vetoes |
 | :--- | :--- | ---: | ---: | ---: | ---: | :--- | :--- |
+| `77842052` | `MDWARF_T>13.5` | 0.38191 | 12249 | 3.26 | 27.7 | `False` | `dur_ratio(3.18);odd_even(3.57s);inv_lc(20.0);sec_ecl(61.3);sap_mismatch` |
+| `31353324` | `MDWARF_T>13.5` | 0.54063 | 15684 | 4.43 | 25.7 | `False` | `dur_ratio(2.69);odd_even(3.30s);inv_lc(23.0);sec_ecl(63.3);rv(5.4)` |
+| `166833387` | `MDWARF_T>13.5` | 0.55063 | 21088 | 4.70 | 25.7 | `False` | `dur_ratio(2.70);sec_ecl(22.9)` |
+| `209462764` | `MDWARF_T>13.5` | 0.26992 | 14234 | 3.01 | 23.8 | `False` | `dur_ratio(3.97);odd_even(3.00s);sec_ecl(25.0)` |
+| `168675553` | `MDWARF_T>13.5` | 0.47155 | 28420 | 4.19 | 22.9 | `False` | `dur_ratio(3.47);sec_ecl(31.2);sap_mismatch` |
+| `304096841` | `MDWARF_T>13.5` | 0.46931 | 9240 | 3.81 | 22.8 | `False` | `odd_even(2.85s);inv_lc(28.7);sec_ecl(34.8);sap_mismatch` |
+| `321087099` | `MDWARF_T>13.5` | 1.09091 | 8391 | 3.17 | 17.4 | `False` | `inv_lc(13.6);sec_ecl(23.2);sap_mismatch` |
+| `7600145` | `MDWARF_T>13.5` | 0.32503 | 4284 | 1.70 | 14.6 | `False` | `dur_ratio(2.71);inv_lc(12.6);sec_ecl(25.2);sap_mismatch;ruwe(1.79)` |
 | `11614485` | `S106_S107_STACK` | 6.00147 | 14795 | 4.87 | 14.1 | `False` | `odd_even(3.69s);inv_lc(11.0);sec_ecl(69.4)` |
+| `142938655` | `MDWARF_T>13.5` | 1.00406 | 12304 | 6.60 | 14.1 | `False` | `alias;inv_lc(12.2);sec_ecl(22.4);sap_mismatch;rv(6.2)` |
 | `129739941` | `S106_S107_STACK` | 4.35175 | 807 | 2.96 | 13.2 | `False` | `odd_even(8.37s);inv_lc(14.7);ruwe(1.41)` |
 | `9166136` | `S106_S107_STACK` | 6.08063 | 1216 | 3.38 | 13.0 | `False` | `inv_lc(10.3);cent(85.1as)` |
+| `77959225` | `MDWARF_T>13.5` | 0.27326 | 4109 | 2.96 | 11.8 | `False` | `dur_ratio(2.78);odd_even(2.97s);inv_lc(17.2);sec_ecl(25.1);sap_mismatch;ruwe(1.45)` |
+| `31281821` | `MDWARF_T>13.5` | 1.06671 | 12948 | 6.16 | 11.6 | `False` | `sap_mismatch` |
+| `31118029` | `MDWARF_T>13.5` | 0.31726 | 3135 | 2.51 | 11.5 | `False` | `odd_even(5.21s);inv_lc(11.6);sec_ecl(12.4);sap_mismatch;ruwe(17.42)` |
+| `44794000` | `MDWARF_T>13.5` | 0.53412 | 22092 | 9.50 | 10.8 | `False` | `rp(9.50Re);dur_ratio(3.19);inv_lc(11.2);sec_ecl(22.1);sap_mismatch;ruwe(7.72)` |
 | `1439071` | `S106_S107_STACK` | 7.51590 | 5379 | 3.86 | 10.7 | `False` | `odd_even(7.40s);inv_lc(9.4);sec_ecl(46.8);rv(39.9)` |
+| `139637517` | `MDWARF_T>13.5` | 0.51885 | 10056 | 3.52 | 10.7 | `False` | `inv_lc(9.7);sec_ecl(11.9)` |
+| `44892011` | `MDWARF_T>13.5` | 0.83075 | 4007 | 1.43 | 10.1 | `False` | `dur_ratio(4.08);odd_even(2.93s);inv_lc(8.3);sec_ecl(5.5)` |

@@ -1,6 +1,6 @@
 {
-  "utc": "2026-11-11T20:23:00Z",
-  "sec_s": 870.8,
+  "utc": "2026-11-11T21:41:40Z",
+  "sec_s": 1616.7,
   "s_max": 107,
   "new_sectors": [
     106,
@@ -14,9 +14,10 @@
     "DATA_GAP": 2,
     "TIMING_OFFSET_TTV": 1
   },
-  "unpromoted_tce_pool_total": 7,
-  "tce_stacked": 7,
+  "unpromoted_tce_pool_total": 127,
+  "tce_stacked": 127,
+  "mdwarfs_searched": 60,
   "usp_hosts": 28,
-  "triggers_vetted": 4,
+  "triggers_vetted": 19,
   "new_passed": 0
 }
