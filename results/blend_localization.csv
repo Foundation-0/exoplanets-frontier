@@ -1,0 +1,8 @@
+tic,gaia_sid,ruwe,pm_masyr,n_sec,off_target_as,err_as,plausible_nbs,closest_nb_sid,closest_nb_sep_as,verdict,upstream_tier,P_d
+115692561,none,1.0,0.0,2,11.51,1.56,0,none,-1.0,OFFSET_MARGINAL,likely nearby FP,0.850322
+253923533,none,1.0,0.0,1,4.9,2.2,0,none,-1.0,ON_TARGET_CLEAN,likely nearby FP,1.156013
+115241103,none,1.0,0.0,2,11.09,1.56,0,none,-1.0,OFFSET_MARGINAL,C,1.864247
+166848769,none,1.0,0.0,0,-1.0,-1.0,0,none,-1.0,NO_DIFF_SNR,C,7.657442
+70557792,none,1.0,0.0,2,13.03,1.56,0,none,-1.0,OFFSET_MARGINAL,S,7.048812
+224279805,none,1.0,0.0,1,0.55,2.2,0,none,-1.0,ON_TARGET_CLEAN,reported,22.984167
+31281821,none,1.0,0.0,2,24.06,1.56,0,none,-1.0,OFFSET_MARGINAL,MDWARF_ROT,1.066713

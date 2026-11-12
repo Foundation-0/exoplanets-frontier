@@ -1,0 +1,15 @@
+{
+  "benchmark_tic": 200322593,
+  "published_P_d": 1.239149,
+  "naive_P_d": 0.726307,
+  "naive_locked_on_spot": true,
+  "despotted_P_d": 1.239126,
+  "despotted_MES": 14.33,
+  "despotted_depth_ppm": 1374.5,
+  "recovered_within_0p1pct": true,
+  "mean_raw_rms_ppm": 2828.7,
+  "mean_clean_rms_ppm": 2484.1,
+  "null_trials": 10,
+  "null_max_MES": 5.77,
+  "null_false_alarms_ge_9p5": 0
+}
