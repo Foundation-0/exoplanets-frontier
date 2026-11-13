@@ -1,0 +1,49 @@
+name: Gaia DR4 Genuine Candidate Catalog Builder
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "dr4_core.py"
+      - "catalog_665.py"
+      - "refresh_dr4.py"
+      - ".github/workflows/dr4_catalog.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  dr4_catalog:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Clone upstream catalog
+        run: |
+          rm -rf _eumemic
+          git clone --depth 1 https://github.com/eumemic/exoplanets _eumemic
+
+      - name: Install uv and scientific stack
+        uses: astral-sh/setup-uv@v5
+
+      - name: Build purified Gaia DR4 readiness and Platinum follow-up tables
+        env:
+          PYTHONUNBUFFERED: "1"
+        run: |
+          rm -rf .venv
+          uv venv .venv
+          uv pip install --python .venv/bin/python numpy scipy pandas matplotlib astropy astroquery
+          .venv/bin/python refresh_dr4.py
+          ls -la results/
+
+      - name: Commit purified Gaia DR4 readiness tables and SHA-256 certificates
+        run: |
+          rm -rf _eumemic .venv
+          git config user.name "orda-aska"
+          git config user.email "orda-aska@users.noreply.github.com"
+          git add results/
+          git diff --cached --quiet || git commit -m "Purge inverted-control rows and update genuine Gaia DR4 readiness tables [skip ci]"
+          git pull --rebase origin main
+          git push origin main
