@@ -1,0 +1,36 @@
+{
+  "frontier_revision": "3636257c9852fcd805a84734a18516526cd1d746",
+  "upstream_revision": "e2eee928fd621f75c1621f6b4206d34bb222ae59",
+  "sources": [
+    {
+      "saved_as": "frontier_CLAIMS_3636257.md",
+      "git_blob_sha": "59d671c724274d4fa32dbd4fb505dd96a19e59ac",
+      "url": "https://github.com/Foundation-0/exoplanets-frontier/blob/3636257c9852fcd805a84734a18516526cd1d746/CLAIMS.md",
+      "sha256": "2c7a24b4e95f209f65ff4e635655d3e78931e73f243d7ced42b5af9e17d0bb1c"
+    },
+    {
+      "saved_as": "upstream_inverted_lightcurves_vetted_e2eee92.csv",
+      "git_blob_sha": "3cbc987a0b700d94db756769fd23ff6e3085aaaf",
+      "url": "https://github.com/eumemic/exoplanets/blob/e2eee928fd621f75c1621f6b4206d34bb222ae59/validation/inverted_lightcurves_vetted.csv",
+      "sha256": "4a678264823424e256684885a23ccab0b3232b34079c9e4f586a3e6dc6437604"
+    },
+    {
+      "saved_as": "upstream_prep_lc_e2eee92.py",
+      "git_blob_sha": "0404c79efe7dad49503c4e35639e9de7bc44ad62",
+      "url": "https://github.com/eumemic/exoplanets/blob/e2eee928fd621f75c1621f6b4206d34bb222ae59/video/tools/prep_lc.py",
+      "sha256": "929008f4760388055c3b190c99b6536aa78a8d53ada0840c1a2c230b24da5f49"
+    },
+    {
+      "saved_as": "upstream_README_e2eee92.md",
+      "git_blob_sha": "cc40149d60c7cbe127a32ca105ced2d4d609d98b",
+      "url": "https://github.com/eumemic/exoplanets/blob/e2eee928fd621f75c1621f6b4206d34bb222ae59/README.md",
+      "sha256": "3f8454a531dcdfc8f2ec0b5bcaca237804a5c5ad24e23b2df2a3a5ee6cf0b82b"
+    },
+    {
+      "saved_as": "upstream_search_e2eee92.py",
+      "git_blob_sha": "01bba320125b7a826c86f1f60deb4f9f0a67dd0a",
+      "url": "https://github.com/eumemic/exoplanets/blob/e2eee928fd621f75c1621f6b4206d34bb222ae59/pipeline/search.py",
+      "sha256": "4625187ad3c9527a24186e044a6bed641b74121c05d45a0820e711ddf24674df"
+    }
+  ]
+}

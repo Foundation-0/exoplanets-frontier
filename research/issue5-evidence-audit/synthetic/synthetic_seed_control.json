@@ -1,0 +1,69 @@
+{
+  "control_script_sha256": "4f3671c95efd5f9d1175dca5e493c39e7276a1ac68232ba2bde066f63395cc26",
+  "package_versions": {
+    "PyYAML": "6.0.3",
+    "astropy": "8.0.2",
+    "astropy-iers-data": "0.2026.11.9.0.35.9",
+    "numpy": "2.5.4",
+    "packaging": "26.3",
+    "pyerfa": "2.0.1.5"
+  },
+  "python_version": "3.14.7",
+  "results": [
+    {
+      "fit_depth_ppm": 1025.5163238729326,
+      "fit_duration_hours": 3.1516874160700104,
+      "fit_epoch_day": 4.997467314833234,
+      "fit_period_days": 17.001522913781276,
+      "injected_duration_hours": 3.0718200936354876,
+      "injected_in_transit_cadences": 35,
+      "injected_period_days": 17.0,
+      "mes_corrected": 58.63564663858626,
+      "mes_raw": 59.79645907323094,
+      "n_transits": 5,
+      "relative_period_error": 8.958316360447076e-05,
+      "sde": 8.588027170947448,
+      "total_cadences": 3840,
+      "would_fail_sde_gate": false
+    },
+    {
+      "fit_depth_ppm": 1024.2441516242761,
+      "fit_duration_hours": 3.5839110104448038,
+      "fit_epoch_day": 4.991480998343264,
+      "fit_period_days": 25.0010843180213,
+      "injected_duration_hours": 3.493090653454974,
+      "injected_in_transit_cadences": 24,
+      "injected_period_days": 25.0,
+      "mes_corrected": 49.76144803746706,
+      "mes_raw": 50.06653710535286,
+      "n_transits": 4,
+      "relative_period_error": 4.3372720851948544e-05,
+      "sde": 7.2313718167142005,
+      "total_cadences": 3840,
+      "would_fail_sde_gate": true
+    }
+  ],
+  "reviewed_source_head": "883e28a7cecde05fdb6679bf574dbe78668332e7",
+  "scope": "Seeded BLS statistic only. No detrending, archive data, full vetter, stellar variability, completeness estimate, or target disposition.",
+  "settings": {
+    "baseline_days": 80.0,
+    "box_depth_ppm": 1000.0,
+    "cadence_minutes": 30.0,
+    "duration_rule": "unchanged bls_search.exp_dur(period, stellar_radius)",
+    "epoch_day": 5.0,
+    "gaussian_noise_sigma_ppm": 100.0,
+    "noise_pairing": "same fixed Gaussian noise vector for both periods",
+    "periods_days": [
+      17.0,
+      25.0
+    ],
+    "rng_seed": 314159,
+    "sde_gate": 7.5,
+    "stellar_radius_solar": 0.55
+  },
+  "source_files_sha256": {
+    "bls_search.py": "a5bb48b81db07d1d633b39c72cfea340e82e4f8c6f46b8ba8a755f64f3f40977",
+    "hz_core.py": "7977d141a473281c328c944cd5772670c205a059032e16af3e37a64e2e6c9a7e"
+  },
+  "source_hashes_match_reviewed_revision": true
+}
