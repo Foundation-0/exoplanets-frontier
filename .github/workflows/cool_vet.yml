@@ -1,0 +1,45 @@
+name: Coolest Platinum and Gold S1-S108 Survivor Vetter
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "cool_io.py"
+      - "cool_core.py"
+      - "cool_vet.py"
+      - ".github/workflows/cool_vet.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  cool_vet:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install uv and scientific stack
+        uses: astral-sh/setup-uv@v5
+
+      - name: Execute S1-S108 transit-shape, ephemeris, and WCS vetting on coolest Platinum/Gold worlds
+        env:
+          PYTHONUNBUFFERED: "1"
+        run: |
+          rm -rf .venv
+          uv venv .venv
+          uv pip install --python .venv/bin/python numpy scipy pandas matplotlib astropy astroquery
+          .venv/bin/python cool_vet.py
+          ls -la results/ results/figures/
+          test -f results/cool_platinum_vetted.csv
+
+      - name: Commit verified cool survivors, updated queues, plots, and SHA-256 certificates
+        run: |
+          rm -rf .venv
+          git config user.name "orda-aska"
+          git config user.email "orda-aska@users.noreply.github.com"
+          git add results/
+          git diff --cached --quiet || git commit -m "Publish verified S1-S108 cool Platinum/Gold planet survivors and diagnostic cards [skip ci]"
+          git pull --rebase origin main
+          git push origin main
