@@ -1,0 +1,49 @@
+name: Issue 5 Habitable-Zone Multi-Sector Vetter
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "hz_core.py"
+      - "hz_vet.py"
+      - ".github/workflows/hz_vet.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  hz_vet:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Clone upstream catalog
+        run: |
+          rm -rf _eumemic
+          git clone --depth 1 https://github.com/eumemic/exoplanets _eumemic
+
+      - name: Install uv and scientific stack
+        uses: astral-sh/setup-uv@v5
+
+      - name: Execute Issue 5 multi-sector S1-S108 temperate audit
+        env:
+          PYTHONUNBUFFERED: "1"
+        run: |
+          rm -rf .venv
+          uv venv .venv
+          uv pip install --python .venv/bin/python numpy scipy pandas matplotlib astropy astroquery
+          .venv/bin/python hz_vet.py
+          ls -la results/ results/figures/
+          test -f results/hz_issue5_audit.csv
+
+      - name: Commit Issue 5 empirical ledger, plots, and SHA-256 certificates
+        run: |
+          rm -rf _eumemic .venv
+          git config user.name "orda-aska"
+          git config user.email "orda-aska@users.noreply.github.com"
+          git add results/
+          git diff --cached --quiet || git commit -m "Capture Issue #5 S1-S108 habitable-zone multi-sector vetting results [skip ci]"
+          git pull --rebase origin main
+          git push origin main
