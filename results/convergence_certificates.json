@@ -2,9 +2,9 @@
   "utc": "2026-11-13T01:33:58Z",
   "elapsed_s": 1109.0,
   "s_max": 108,
-  "catalog_total": 3543,
-  "platinum_gold_count": 22,
-  "temperate_hz_clean_count": 6,
+  "catalog_total": 2421,
+  "platinum_gold_count": 348,
+  "temperate_hz_clean_count": 0,
   "new_mdwarf_passed": 0,
   "benchmark": {
     "benchmark_tic": 200322593,
@@ -19,8 +19,9 @@
     "null_false_alarms_ge_9p5": 0
   },
   "files_sha256": {
-    "CONVERGENCE_REPORT.md": "02a404dc90653b4b8d1ba69e2a04260c83d275f79b812e2325d305f4d375eaa4",
+    "CONVERGENCE_REPORT.md": "cbd60c870607548e2e4f4fadea48feafbb3a09869139f79d7f169dcae814055f",
     "DISCOVERIES.md": "da3c139dbe7b1831c5153fb0c915b312b6a07671c4949d4400f26542b28cb3e3",
+    "GAIA_DR4_CATALOG_AUDIT.md": "038def4307eef4bceb5379b79e09c118cad6fb272c79fe4bcb3a2472271650a0",
     "HZ_ISSUE5_REPORT.md": "506d1577c2e4ec08c905b34a79e9f50479b1e3643c09b7b8698828cf5697b7c4",
     "benchmark_and_null.json": "2c6d4454bcb241620bdaaa17b892143d1a188364aa3b566cb7034fe0b35f3fc2",
     "blend_localization.csv": "a73e65e18a62bc0a5e37af53833bd030aced4b86aed04b461b5ace593a6817e2",
@@ -28,7 +29,7 @@
     "campaign_summary.json": "68865b699133189ae64eebd21bfdff1f76a7831847b5e0f053e5c510907a5ac2",
     "despotted_mdwarf_audit.csv": "74a603566ef8767e9e05f50f054e02b0b43cbb84b619e4b33a86ba89feecc9a4",
     "discovery_triggers_vetted.csv": "0e55704d1e9ae70b90688d92dcd57f9ce5d5c75a4c0a4a8f90b022dc683a1b23",
-    "eumemic_gaia_dr4_readiness.csv": "58603ad3bd8c0ac66b7ee9972b6d302b1ec40c9706882ccab114f92e3dd653c9",
+    "eumemic_gaia_dr4_readiness.csv": "f332cf6c2140de2cd9e3c9eaf443d1d1d9eada981cbdbfbc57df3b9471361746",
     "figures/benchmark_TOI540_despot.png": "50fd598175720589d5308e45d3b590e6bef451acc82743126fb8f09b7034623c",
     "figures/converge_TIC115241103.png": "7fc909792e35439b4ef11dcc7c4b5b77ab75d82b47b92de7be4388c655c1980f",
     "figures/converge_TIC115692561.png": "a759ab0c07ac6d6d70acba9676d321c34061b55b1edf516f6e9f911e9e254b7b",
@@ -54,7 +55,7 @@
     "figures/ttv_TIC321011164.png": "7e3514b492b9b30b7963c8aaabf754e8918701bf159bb8119446d9d7113a13ce",
     "figures/ttv_TIC332644900.png": "c04e1bd3e483eee0918a2d5c736339dca51f16612c5f5d90c0f2b17de31b6a7c",
     "hz_issue5_audit.csv": "28e36fbd280ddefc69a3adb9e4089e99a034c395230a16c7c39a9331781dd14c",
-    "platinum_followup_targets.csv": "b24f080f8e2fdaf41ece4a15802b064434a1acad63a44bbcb2b3caa88dbadf69",
+    "platinum_followup_targets.csv": "e2bca4f9e22160d1676bf2678f20bfbd1acc29d022e5fff522401c0ad49161b5",
     "sibling_residual_search.csv": "68e918e53c90434b6080449de311c32ee9f76c6f0a46b44917494144319919a9",
     "ttv_ephemeris_audit.csv": "50640b0182ea285acc8ad9faa10021436d6fd07b7c95d477a2ef46bfb58d6903",
     "ttv_transit_epochs.csv": "4906deb203fa9b89299977ab6eaab9372a209be22b663f346ff76583fca8f410",
@@ -64,5 +65,29 @@
   "issue5_elapsed_s": 1396.0,
   "issue5_elapsed_targets": 11,
   "issue5_leads_survived": 0,
-  "v3_cool_survived": 0
+  "v3_cool_survived": 0,
+  "dr4_purified_utc": "2026-11-13T04:20:18Z",
+  "dr4_purified_elapsed_s": 425.6,
+  "temperate_hz_all_count": 0,
+  "inverted_control_rows_remaining": 0,
+  "dr4_class_counts": {
+    "MULTI_SECTOR_VETTED_WARNING": 978,
+    "SILVER_CROWDED_SG1": 654,
+    "BINARY_OR_EVOLVED_WARNING": 230,
+    "GOLD_LOW_BLEND": 211,
+    "CROWDED_INDEXED": 191,
+    "PLATINUM_SOLO_VERIFIED": 137,
+    "LOW_CONTAM_INDEXED": 20
+  },
+  "upstream_tier_counts": {
+    "likely nearby FP": 1109,
+    "C": 551,
+    "S": 291,
+    "N": 158,
+    "L1": 111,
+    "nan": 88,
+    "L": 72,
+    "M": 22,
+    "reported": 19
+  }
 }

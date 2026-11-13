@@ -1,34 +1,43 @@
-# Phase 3 Synthesis: 665-Candidate Gaia DR4 Catalog & Cycle 1-8 Ephemerides (1109.0 s)
+# Phase 3 Synthesis (Purified): Genuine-Only Gaia DR4 Catalog, Cycle 1-8 Ephemerides & Two-Pass Cool-Dwarf Survey
 
-- Catalog: 3543 indexed ({'CROWDED_INDEXED': 1927, 'BINARY_OR_EVOLVED_WARNING': 844, 'LOW_CONTAM_INDEXED': 724, 'SILVER_CROWDED_SG1': 26, 'GOLD_LOW_BLEND': 19, 'PLATINUM_SOLO_VERIFIED': 3}), 22 Platinum/Gold (6 temperate HZ 180-325 K).
-- TOI-540b Benchmark: P=1.239126 d (MES=14.33), Null=0/10 | Cool-Dwarfs (33): 0 passed.
+Purified results_public/candidates_allsky.csv + VizieR I/355/gaiadr3 catalog rebuild (425.6 s; validation/inverted_lightcurves_vetted.csv purged).
 
-## 1. Top Platinum Solo-Verified & Temperate Candidates
+- Genuine Candidate Catalog (results/eumemic_gaia_dr4_readiness.csv): 2421 candidates indexed ({'MULTI_SECTOR_VETTED_WARNING': 978, 'SILVER_CROWDED_SG1': 654, 'BINARY_OR_EVOLVED_WARNING': 230, 'GOLD_LOW_BLEND': 211, 'CROWDED_INDEXED': 191, 'PLATINUM_SOLO_VERIFIED': 137, 'LOW_CONTAM_INDEXED': 20}); 348 Platinum/Gold Clean Targets (0 temperate 180-325 K).
 
-| tic | gaia_dr3_id | upstream_tier | P_d | Rp_Re | Teq_K | is_hz_temperate | TSM | Tmag | ruwe | plausible_beb_65as | dr4_class |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| 181015118 | 5382868669400908928 | nan | 25.26197 | 2.28 | 258.0 | True | 97.4 | 8.99 | 1.0 | 0 | PLATINUM_SOLO_VERIFIED |
-| 181015118 | 5382868669400908928 | nan | 18.317993 | 1.78 | 288.0 | True | 64.6 | 8.99 | 1.0 | 1 | GOLD_LOW_BLEND |
-| 246897668 | 2980822034888930176 | nan | 24.752432 | 2.1 | 282.0 | True | 58.1 | 9.24 | 1.0 | 0 | PLATINUM_SOLO_VERIFIED |
-| 37904598 | 3199132439405197696 | nan | 17.049176 | 2.77 | 303.0 | True | 44.3 | 11.21 | 1.0 | 1 | GOLD_LOW_BLEND |
-| 146636926 | 4947259307983420928 | nan | 26.056445 | 2.55 | 251.0 | True | 42.7 | 11.47 | 1.0 | 1 | GOLD_LOW_BLEND |
-| 146636926 | 4947259307983420928 | nan | 23.920264 | 2.11 | 258.0 | True | 29.8 | 11.47 | 1.0 | 1 | GOLD_LOW_BLEND |
-| 79278415 | 6320381307658461184 | S | 3.348204 | 6.55 | 1328.0 | False | 88.0 | 12.03 | 1.0 | 1 | GOLD_LOW_BLEND |
-| 241537628 | 2481055723313271168 | S | 14.787554 | 7.76 | 825.0 | False | 84.1 | 12.13 | 1.0 | 0 | GOLD_LOW_BLEND |
-| 211405734 | 6783075699211325696 | nan | 7.297485 | 7.53 | 444.0 | False | 157.0 | 13.48 | 1.0 | 0 | GOLD_LOW_BLEND |
-| 84191887 | 1953355906525258752 | nan | 2.12798 | 5.57 | 598.0 | False | 147.2 | 13.5 | 1.0 | 1 | GOLD_LOW_BLEND |
-| 283669507 | 1780614933214780800 | nan | 2.180834 | 4.19 | 1772.0 | False | 152.6 | 9.0 | 1.0 | 0 | PLATINUM_SOLO_VERIFIED |
-| 105655329 | 1283573314535218560 | nan | 1.800672 | 4.58 | 1356.0 | False | 154.2 | 10.55 | 1.0 | 0 | GOLD_LOW_BLEND |
-| 355072530 | 272635972674562176 | C | 13.698274 | 9.09 | 780.0 | False | 154.8 | 12.66 | 1.0 | 1 | GOLD_LOW_BLEND |
-| 399948046 | 12893530478007552 | likely nearby FP | 15.913365 | 8.27 | 607.0 | False | 122.6 | 12.82 | 1.0 | 1 | GOLD_LOW_BLEND |
-| 244252435 | 3212738719703024384 | nan | 0.566432 | 3.43 | 1235.0 | False | 133.0 | 11.05 | 1.0 | 1 | GOLD_LOW_BLEND |
-| 156380270 | 3884882276685154944 | C | 1.521754 | 6.4 | 899.0 | False | 117.3 | 13.45 | 1.0 | 0 | GOLD_LOW_BLEND |
-| 79390722 | 6321177835113922816 | likely nearby FP | 4.423039 | 5.49 | 1117.0 | False | 117.2 | 10.98 | 1.0 | 1 | GOLD_LOW_BLEND |
-| 16983459 | 1370728607676424192 | likely nearby FP | 0.811675 | 6.15 | 1915.0 | False | 116.9 | 12.53 | 1.0 | 1 | GOLD_LOW_BLEND |
-| 437709086 | 2822231810591184896 | S | 2.925309 | 6.76 | 1504.0 | False | 76.2 | 12.63 | 1.0 | 1 | GOLD_LOW_BLEND |
-| 1400125 | 5683477411879049216 | nan | 0.948647 | 2.37 | 1341.0 | False | 113.3 | 9.47 | 1.0 | 1 | GOLD_LOW_BLEND |
-| 372946271 | 1759254067988060288 | C | 2.956309 | 8.47 | 1478.0 | False | 111.1 | 12.84 | 1.0 | 1 | GOLD_LOW_BLEND |
-| 343942488 | 2823623208196929920 | S | 0.653612 | 8.84 | 2173.0 | False | 205.4 | 13.3 | 1.0 | 0 | GOLD_LOW_BLEND |
+## 1. Top Purified Platinum Solo-Verified & Gold Low-Blend Candidates
+
+| tic | upstream_tier | gaia_dr3_id | P_d | Rp_Re | Teq_K | is_hz_temperate | TSM | Tmag | ruwe | plausible_beb_65as | frontier_note | dr4_class |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 219329329 | S | 6507925182103208960 | 3.48114 | 11.2 | 1355.0 | False | 262.6 | 12.41 | 1.0 | 0 | clean | PLATINUM_SOLO_VERIFIED |
+| 220162618 | S | 6230934043874288384 | 3.804428 | 12.09 | 1175.0 | False | 228.0 | 12.81 | 1.0 | 1 | clean | GOLD_LOW_BLEND |
+| 357504233 | S | 1264085364286632832 | 3.937343 | 11.83 | 1326.0 | False | 196.4 | 12.41 | 1.0 | 1 | clean | GOLD_LOW_BLEND |
+| 3886680 | S | 2524040649365516032 | 10.691905 | 10.49 | 899.0 | False | 120.7 | 12.68 | 1.0 | 0 | clean | PLATINUM_SOLO_VERIFIED |
+| 224279805 | reported | 6534130392483208320 | 22.984167 | 11.21 | 661.0 | False | 147.0 | 12.15 | 1.0 | 1 | verified_on_target(4.78as) | GOLD_LOW_BLEND |
+| 335955084 | C | 6305546460554805248 | 0.664381 | 5.68 | 1994.0 | False | 130.3 | 11.92 | 1.0 | 0 | clean | PLATINUM_SOLO_VERIFIED |
+| 269746198 | C | 2851297159952973568 | 0.714152 | 8.16 | 2193.0 | False | 178.0 | 12.79 | 1.0 | 0 | clean | PLATINUM_SOLO_VERIFIED |
+| 441301617 | C | 6793097197943841536 | 0.754367 | 8.21 | 1753.0 | False | 262.0 | 12.98 | 1.0 | 1 | clean | GOLD_LOW_BLEND |
+| 310261847 | C | 1300932163598098176 | 1.039797 | 12.25 | 1793.0 | False | 438.8 | 12.93 | 1.0 | 0 | clean | PLATINUM_SOLO_VERIFIED |
+| 119968345 | C | 1907225724382651008 | 1.101738 | 8.21 | 1449.0 | False | 228.7 | 12.82 | 1.0 | 0 | clean | PLATINUM_SOLO_VERIFIED |
+| 306484531 | C | 100461144774946944 | 1.772903 | 9.17 | 1813.0 | False | 146.0 | 12.9 | 1.0 | 1 | clean | GOLD_LOW_BLEND |
+| 293197619 | C | 2705701131576855040 | 1.799106 | 6.14 | 1864.0 | False | 146.9 | 10.98 | 1.0 | 1 | clean | GOLD_LOW_BLEND |
+| 305720469 | C | 6175362389744459520 | 1.806433 | 9.63 | 1739.0 | False | 146.1 | 12.8 | 1.0 | 1 | clean | GOLD_LOW_BLEND |
+| 437430304 | C | 6248561178072606592 | 3.418897 | 9.55 | 1470.0 | False | 266.5 | 11.14 | 1.0 | 0 | clean | PLATINUM_SOLO_VERIFIED |
+| 241163081 | C | 927101882348867584 | 3.629423 | 11.1 | 1383.0 | False | 216.9 | 12.92 | 1.0 | 1 | clean | GOLD_LOW_BLEND |
+| 91051499 | C | 2844181326857165440 | 3.866608 | 9.31 | 1304.0 | False | 275.8 | 11.59 | 1.0 | 0 | clean | PLATINUM_SOLO_VERIFIED |
+| 399695544 | C | 2562807711373323392 | 11.537094 | 8.66 | 426.0 | False | 124.7 | 13.37 | 1.0 | 1 | clean | GOLD_LOW_BLEND |
+| 355072530 | C | 272635972674562176 | 13.698274 | 9.09 | 780.0 | False | 154.8 | 12.66 | 1.0 | 1 | clean | GOLD_LOW_BLEND |
+| 409696823 | reported | 6456309089775016192 | 24.949846 | 6.47 | 453.0 | False | 89.4 | 11.7 | 1.0 | 0 | clean | PLATINUM_SOLO_VERIFIED |
+| 79278415 | S | 6320381307658461184 | 3.348204 | 6.55 | 1328.0 | False | 88.0 | 12.03 | 1.0 | 1 | clean | GOLD_LOW_BLEND |
+| 156380270 | C | 3884882276685154944 | 1.521754 | 6.4 | 899.0 | False | 117.3 | 13.45 | 1.0 | 0 | clean | PLATINUM_SOLO_VERIFIED |
+| 241537628 | S | 2481055723313271168 | 14.787554 | 7.76 | 825.0 | False | 84.1 | 12.13 | 1.0 | 0 | clean | PLATINUM_SOLO_VERIFIED |
+| 187272399 | C | 3620212506276610432 | 1.762564 | 3.66 | 901.0 | False | 113.2 | 11.33 | 1.0 | 1 | clean | GOLD_LOW_BLEND |
+| 372946271 | C | 1759254067988060288 | 2.956309 | 8.47 | 1478.0 | False | 111.1 | 12.84 | 1.0 | 1 | clean | GOLD_LOW_BLEND |
+| 376665619 | C | 1321149880329990144 | 4.102 | 5.85 | 1188.0 | False | 107.6 | 11.21 | 1.0 | 0 | clean | PLATINUM_SOLO_VERIFIED |
+| 46801759 | C | 5744530307567928448 | 4.690051 | 7.19 | 1232.0 | False | 106.9 | 12.53 | 1.0 | 1 | clean | GOLD_LOW_BLEND |
+| 437709086 | S | 2822231810591184896 | 2.925309 | 6.76 | 1504.0 | False | 76.2 | 12.63 | 1.0 | 1 | clean | GOLD_LOW_BLEND |
+| 270498731 | C | 3619863209471389696 | 0.898221 | 5.58 | 1916.0 | False | 101.8 | 12.57 | 1.0 | 1 | clean | GOLD_LOW_BLEND |
+| 365061655 | C | 2566022064897681152 | 0.997125 | 6.3 | 1834.0 | False | 101.4 | 12.95 | 1.0 | 0 | clean | PLATINUM_SOLO_VERIFIED |
+| 343942488 | S | 2823623208196929920 | 0.653612 | 8.84 | 2173.0 | False | 205.4 | 13.3 | 1.0 | 0 | clean | GOLD_LOW_BLEND |
 
 ## 2. Full 2018-2026 (Cycles 1-8) Ephemeris & TTV Lock
 
