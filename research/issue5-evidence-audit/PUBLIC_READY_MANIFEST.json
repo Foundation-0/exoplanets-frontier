@@ -1,0 +1,21 @@
+{
+  "audit_output_matches_saved_json": true,
+  "files_sha256": {
+    "bls_search.py": "a5bb48b81db07d1d633b39c72cfea340e82e4f8c6f46b8ba8a755f64f3f40977",
+    "converge_io.py": "36be87209c978115540ab88f7d96de35c4f95ea584cc8d4b484338c15f72109b",
+    "hz_core.py": "7977d141a473281c328c944cd5772670c205a059032e16af3e37a64e2e6c9a7e",
+    "hz_vet.py": "32b809fd34a4d0d126624ad05ef786f6e70bf1e08d33b49a0fc87f27c76977f2",
+    "mast_data.py": "9cf8770d0b6bc550b87ca67c0eca537edf79b8b37ce6fb43b5eca5dc382ec240",
+    "research/issue5-evidence-audit/REVIEW.md": "28e3cbe544a4c69d53c5dba13a30d2a41b1039d3b2c9180b9c990f3c84eb0e71",
+    "research/issue5-evidence-audit/audit_snapshot.py": "cffff78a1289088ba221033b57cbb500f65a6a2b4cb41141b9f84d6bf9666001",
+    "research/issue5-evidence-audit/evidence.json": "6b56ef99ffed9befff30f8f66ef84186e69c72dee6a3d657dcfefaf427200f94",
+    "results/HZ_ISSUE5_REPORT.md": "506d1577c2e4ec08c905b34a79e9f50479b1e3643c09b7b8698828cf5697b7c4",
+    "results/convergence_certificates.json": "dc1c7b9f5a4f92a418548b34c4939f3782e31ce4bdc308ac5ffc226c50e15a38",
+    "results/hz_issue5_audit.csv": "28e36fbd280ddefc69a3adb9e4089e99a034c395230a16c7c39a9331781dd14c",
+    "vetter.py": "cf910ed563e14831a6cfaff2d8309cdc05848fbf84928e0b2a73f535124b982f"
+  },
+  "result_manifest_entries_verified": 40,
+  "scope": "evidence audit only; no new transit analysis or planet validation",
+  "source_head": "883e28a7cecde05fdb6679bf574dbe78668332e7",
+  "verdict": "PUBLIC_READY"
+}
