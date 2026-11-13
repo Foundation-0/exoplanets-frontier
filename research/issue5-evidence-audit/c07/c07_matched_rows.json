@@ -1,0 +1,56 @@
+[
+  {
+    "tic": "181015118",
+    "frontier_period_days": "25.26197",
+    "upstream_period_days": "25.26196970935829",
+    "upstream_rank": "3",
+    "upstream_n_fail": "7",
+    "upstream_known_status": "known",
+    "upstream_known_detail": "tce:tess2021092173506-s0037-s0037:x0.5"
+  },
+  {
+    "tic": "181015118",
+    "frontier_period_days": "18.31799",
+    "upstream_period_days": "18.3179925909046",
+    "upstream_rank": "2",
+    "upstream_n_fail": "6",
+    "upstream_known_status": "new",
+    "upstream_known_detail": "tce:tess2018206190142-s0001-s0036:P=30.2690;tce:tess2018206190142-s0001-s0036:P=25.9342;tce:tess2018206190142-s0001-s0036:P=11.1029"
+  },
+  {
+    "tic": "246897668",
+    "frontier_period_days": "24.75243",
+    "upstream_period_days": "24.7524323734834",
+    "upstream_rank": "3",
+    "upstream_n_fail": "7",
+    "upstream_known_status": "new",
+    "upstream_known_detail": "tce:tess2018206190142-s0001-s0036:P=736.2670;tce:tess2018206190142-s0001-s0036:P=26.1294;tce:tess2018206190142-s0001-s0036:P=179.1990"
+  },
+  {
+    "tic": "37904598",
+    "frontier_period_days": "17.04918",
+    "upstream_period_days": "17.0491756357338",
+    "upstream_rank": "2",
+    "upstream_n_fail": "0",
+    "upstream_known_status": "new",
+    "upstream_known_detail": "tce:tess2018206190142-s0001-s0036:P=182.1360;tce:tess2018206190142-s0001-s0036:P=751.3140;tce:tess2020325171311-s0032-s0032:P=9.8842"
+  },
+  {
+    "tic": "146636926",
+    "frontier_period_days": "26.05645",
+    "upstream_period_days": "26.056444564621607",
+    "upstream_rank": "1",
+    "upstream_n_fail": "6",
+    "upstream_known_status": "new",
+    "upstream_known_detail": "tce:tess2018206190142-s0001-s0006:P=33.6042;tce:tess2018206190142-s0001-s0006:P=12.4002;tce:tess2018206190142-s0001-s0036:P=741.4620"
+  },
+  {
+    "tic": "146636926",
+    "frontier_period_days": "23.92026",
+    "upstream_period_days": "23.920263616157246",
+    "upstream_rank": "2",
+    "upstream_n_fail": "4",
+    "upstream_known_status": "new",
+    "upstream_known_detail": "tce:tess2018206190142-s0001-s0006:P=33.6042;tce:tess2018206190142-s0001-s0006:P=12.4002;tce:tess2018206190142-s0001-s0036:P=741.4620"
+  }
+]
