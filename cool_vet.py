@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-""Vet the coolest purified Platinum/Gold candidates across TESS Sectors 1-108 and publish survivors."""
+# Vet the coolest purified Platinum and Gold candidates across TESS Sectors 1-108.
 from __future__ import annotations
 import hashlib, json, time
 from pathlib import Path
@@ -9,7 +9,7 @@ from cool_core import vet_cool_candidate
 MANDATORY_TICS = [399695544, 409696823, 224279805]
 
 
-def select_coolest_targets(df_plat: pd.DataFrame, max_n: int = 14) -> list[dict]:
+def select_coolest_targets(df_plat: pd.DataFrame, max_n: int = 10) -> list[dict]:
     df_s = df_plat.sort_values(["Teq_K", "priority_score"], ascending=[True, False]).reset_index(drop=True)
     picked, seen = [], set()
     for tid in MANDATORY_TICS:
@@ -38,7 +38,7 @@ def main(out_dir: Path = Path("results")):
     plat_p = out_dir / "platinum_followup_targets.csv"
     assert plat_p.exists(), "results/platinum_followup_targets.csv missing"
     df_plat = pd.read_csv(plat_p)
-    targets = select_coolest_targets(df_plat, max_n=14)
+    targets = select_coolest_targets(df_plat, max_n=10)
     rows = [vet_cool_candidate(r, fig_d) for r in targets]
     pd.DataFrame(rows).to_csv(out_dir / "cool_platinum_vetted.csv", index=False)
     surv = [r for r in rows if r["survived"]]

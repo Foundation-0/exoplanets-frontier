@@ -1,0 +1,3 @@
+tic,upstream_tier,dr4_class,Tmag,Teff,Rstar,P_cat_d,P_ref_d,T0_ref_BJD,dP_sec,n_sec_avail,n_sec_used,n_sec_hit,n_transits,std_MES,despot_MES,SDE,depth_ppm,Rp_fit_Re,Teq_fit_K,odd_even_s,sec_ecl_snr,wcs_off_as,wcs_verdict,ephem_class,survived,vetoes
+409696823,reported,PLATINUM_SOLO_VERIFIED,11.7,4539.0,0.799,24.949846,24.9499236,2459044.57556,14.747,10,6,4,4,19.8,19.98,16.95,5131.8,6.25,453.0,0.5,3.82,1.93,ON_TARGET_CLEAN,LINEAR_DRIFT_RESCUED,True,CLEAN
+224279805,reported,GOLD_LOW_BLEND,12.15,5591.0,1.198,22.984167,22.9841892,2458369.72101,-5.566,8,6,4,4,29.63,26.8,10.21,6826.1,10.88,661.0,2.71,6.42,2.04,ON_TARGET_CLEAN,ON_SCHEDULE_STABLE,True,CLEAN
