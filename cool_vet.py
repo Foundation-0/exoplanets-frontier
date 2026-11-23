@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-""Vet the coolest purified Platinum/Gold candidates across TESS Sectors 1-108 and publish survivors."""
+"""Vet the coolest purified Platinum/Gold candidates across TESS Sectors 1-108 and publish survivors."""
 from __future__ import annotations
 import hashlib, json, time
 from pathlib import Path
