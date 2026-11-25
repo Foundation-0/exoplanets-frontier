@@ -5,10 +5,15 @@ import numpy as np
 from bls_search import BTJD0, search_bls
 
 def extract_transit_times(lcs: list[dict], p0: float, t0_btjd: float, dur_d: float, max_shift_min: float = 240.0):
+    if not (np.isfinite(p0) and p0 > 0 and np.isfinite(t0_btjd) and np.isfinite(dur_d) and dur_d > 0 and np.isfinite(max_shift_min) and max_shift_min > 0):
+        return [], []
     lim = min(max_shift_min, 0.30 * p0 * 1440.0); grid = np.linspace(-lim, lim, max(61, int(round(lim)) + 1)); sec_r, ind_r = [], []
     for lc in sorted(lcs, key=lambda x: x["sec"]):
-        t, f, s = lc["t"], lc["f"], int(lc["sec"])
+        t = np.asarray(lc["t"], dtype=float); f = np.asarray(lc["f"], dtype=float); s = int(lc["sec"])
+        v = np.isfinite(t) & np.isfinite(f)
+        t, f = t[v], f[v]
         if len(t) < 60: continue
+        o = np.argsort(t); t, f = t[o], f[o]
         ks = range(math.ceil((float(t[0]) - t0_btjd) / p0) - 1, math.floor((float(t[-1]) - t0_btjd) / p0) + 2)
         cov = [k for k in ks if np.sum(np.abs(t - (t0_btjd + k * p0)) <= (lim / 1440.0 + 0.5 * dur_d)) >= 2]
         if not cov: continue
@@ -45,14 +50,30 @@ def extract_transit_times(lcs: list[dict], p0: float, t0_btjd: float, dur_d: flo
                               "err_min": round(max(2.0, 0.55 * dur_d * 1440.0 / bs2), 2), "snr_peak": round(bs2, 2), "snr_stale": round(snr0, 2), "depth_ppm": round(bdp, 1)})
     return sec_r, ind_r
 
+def _valid_timing_rows(rows: list[dict]) -> list[dict]:
+    out = []
+    for r in rows:
+        try:
+            vals = (float(r["epoch"]), float(r["dt_min"]), float(r["err_min"]), float(r["snr_peak"]))
+        except (KeyError, TypeError, ValueError):
+            continue
+        if all(np.isfinite(v) for v in vals) and vals[2] > 0.0:
+            out.append(r)
+    return out
+
 def fit_ephemeris_models(sec_r: list[dict], ind_r: list[dict], p0: float, t0_btjd: float):
-    use_i = len(ind_r) >= 6 and float(np.median([r["snr_peak"] for r in ind_r])) >= 3.6
-    rows = [r for r in (ind_r if use_i else sec_r) if r["snr_peak"] >= 2.4]; n = len(rows)
-    if n < 2:
+    if not (np.isfinite(p0) and p0 > 0 and np.isfinite(t0_btjd)):
+        raise ValueError(f"fit_ephemeris_models requires finite p0>0 and t0_btjd; got p0={p0}, t0_btjd={t0_btjd}")
+    clean_ind = _valid_timing_rows(ind_r)
+    clean_sec = _valid_timing_rows(sec_r)
+    use_i = len(clean_ind) >= 6 and float(np.median([float(r["snr_peak"]) for r in clean_ind])) >= 3.6
+    rows = [r for r in (clean_ind if use_i else clean_sec) if float(r["snr_peak"]) >= 2.4]; n = len(rows)
+    E = np.array([float(r["epoch"]) for r in rows], dtype=float) if n else np.array([], dtype=float)
+    if n < 2 or len(np.unique(E)) < 2:
         return {"n_ep": n, "source": "low", "P_ref": p0, "T0_ref_BJD": t0_btjd + BTJD0, "dP_sec": 0.0, "rms0_m": 0.0, "rms_lin_m": 0.0,
                 "ttv_amp_m": 0.0, "ttv_sup_orb": 0.0, "dBIC_lin": 0.0, "dBIC_quad": 0.0, "dBIC_ttv": 0.0, "class": "INSUFFICIENT_EPOCHS"}
-    E = np.array([float(r["epoch"]) for r in rows]); y = np.array([float(r["dt_min"]) for r in rows])
-    w = 1.0 / (np.maximum(np.array([float(r["err_min"]) for r in rows]), 1.5) ** 2); bic0 = float(np.sum(w * y ** 2))
+    y = np.array([float(r["dt_min"]) for r in rows], dtype=float)
+    w = 1.0 / (np.maximum(np.array([float(r["err_min"]) for r in rows], dtype=float), 1.5) ** 2); bic0 = float(np.sum(w * y ** 2))
     Xl = np.column_stack([np.ones(n), E]); cl, *_ = np.linalg.lstsq(Xl * np.sqrt(w)[:, None], y * np.sqrt(w), rcond=None)
     rl = y - Xl @ cl; chil = float(np.sum(w * rl ** 2)); bicl = chil + 2.0 * math.log(n)
     p_ref, t0_ref, dbic_q, dbic_t, amp_t, sup_t = p0 + float(cl[1]) / 1440.0, t0_btjd + float(cl[0]) / 1440.0, 0.0, 0.0, 0.0, 0.0
@@ -60,12 +81,22 @@ def fit_ephemeris_models(sec_r: list[dict], ind_r: list[dict], p0: float, t0_btj
         Xq = np.column_stack([np.ones(n), E, 0.5 * E ** 2]); cq, *_ = np.linalg.lstsq(Xq * np.sqrt(w)[:, None], y * np.sqrt(w), rcond=None)
         dbic_q = bicl - (float(np.sum(w * (y - Xq @ cq) ** 2)) + 3.0 * math.log(n))
     if n >= 6 and len(np.unique(E)) >= 6:
+        n_trials = 140
+        max_amp = min(240.0, max(3.0 * float(np.max(np.abs(rl))), 25.0))
         bchi = chil
-        for ps in np.geomspace(3.5, max(16.0, 1.3 * float(np.max(E) - np.min(E))), 140):
+        for ps in np.geomspace(3.5, max(16.0, 1.3 * float(np.max(E) - np.min(E))), n_trials):
             Xt = np.column_stack([np.ones(n), E, np.cos(2.0 * np.pi * E / ps), np.sin(2.0 * np.pi * E / ps)])
-            ct, *_ = np.linalg.lstsq(Xt * np.sqrt(w)[:, None], y * np.sqrt(w), rcond=None); ct_chi = float(np.sum(w * (y - Xt @ ct) ** 2))
-            if ct_chi < bchi: bchi, amp_t, sup_t = ct_chi, float(math.hypot(ct[2], ct[3])), float(ps)
-        dbic_t = bicl - (bchi + 5.0 * math.log(n))
+            ct, *_ = np.linalg.lstsq(Xt * np.sqrt(w)[:, None], y * np.sqrt(w), rcond=None)
+            if not np.all(np.isfinite(ct)):
+                continue
+            amp_c = float(math.hypot(ct[2], ct[3]))
+            if not (np.isfinite(amp_c) and amp_c <= max_amp):
+                continue
+            ct_chi = float(np.sum(w * (y - Xt @ ct) ** 2))
+            if np.isfinite(ct_chi) and ct_chi < bchi:
+                bchi, amp_t, sup_t = ct_chi, amp_c, float(ps)
+        if amp_t > 0.0:
+            dbic_t = bicl - (bchi + 5.0 * math.log(n) + 2.0 * math.log(n_trials))
     dbic_l = bic0 - bicl
     cls = ("DYNAMICAL_TTV_CANDIDATE" if (n >= 6 and dbic_t >= 10.0 and amp_t >= 4.0) else "QUADRATIC_PRECESSION_CANDIDATE" if (n >= 5 and dbic_q >= 10.0) else
            "LINEAR_DRIFT_RESCUED" if (dbic_l >= 10.0 and float(np.max(np.abs(y))) >= 16.0) else "ON_SCHEDULE_STABLE")
@@ -74,7 +105,14 @@ def fit_ephemeris_models(sec_r: list[dict], ind_r: list[dict], p0: float, t0_btj
             "ttv_amp_m": round(amp_t, 2), "ttv_sup_orb": round(sup_t, 1), "dBIC_lin": round(dbic_l, 1), "dBIC_quad": round(dbic_q, 1), "dBIC_ttv": round(dbic_t, 1), "class": cls}
 
 def restack_and_siblings(lcs: list[dict], p0: float, t0_bt: float, p_ref: float, t0_ref_bt: float, dur_d: float, rs: float):
-    valid = [x for x in lcs if len(x["t"]) >= 60]
+    if not (np.isfinite(p0) and p0 > 0 and np.isfinite(p_ref) and p_ref > 0 and np.isfinite(t0_bt) and np.isfinite(t0_ref_bt) and np.isfinite(dur_d) and dur_d > 0 and np.isfinite(rs) and rs > 0):
+        return {"snr_stale": 0.0, "snr_ref": 0.0, "sib": None, "single_snr": 0.0, "single_btjd": 0.0}
+    valid = []
+    for x in lcs:
+        tx, fx, fex = np.asarray(x["t"], float), np.asarray(x["f"], float), np.asarray(x["fe"], float)
+        m = np.isfinite(tx) & np.isfinite(fx) & np.isfinite(fex) & (fex > 0)
+        if int(np.sum(m)) >= 60:
+            valid.append({"t": tx[m], "f": fx[m], "fe": fex[m]})
     if not valid: return {"snr_stale": 0.0, "snr_ref": 0.0, "sib": None, "single_snr": 0.0, "single_btjd": 0.0}
     t = np.concatenate([x["t"] for x in valid]); f = np.concatenate([x["f"] for x in valid]); fe = np.concatenate([x["fe"] for x in valid])
     o = np.argsort(t); t, f, fe = t[o], f[o], fe[o]
