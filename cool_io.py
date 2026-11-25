@@ -22,8 +22,35 @@ def load_cycles_1_to_8(tid: int, ra: float, dec: float):
         with cf.ThreadPoolExecutor(max_workers=4) as ex:
             for r in ex.map(lambda s: ffi_cutout_lc(tid, ra, dec, s), want):
                 if r:
-                    raw.append({**r, "sap": r["f"].copy(), "crowd": 0.94, "mode": "FFI"})
+                    raw.append({**r, "sap": np.full(len(r["f"]), np.nan, dtype=float), "crowd": np.nan, "mode": "FFI"})
     return sorted(raw, key=lambda x: x["sec"]), alls
+
+
+def calibrated_bls_sde(pw_bg, pw_fn) -> float:
+    """Compute SDE using off-window broadband background (or off-peak fine wings fallback)."""
+    fn = np.asarray(pw_fn, dtype=float)
+    fn = fn[np.isfinite(fn)]
+    if len(fn) == 0:
+        return 0.0
+    peak = float(np.max(fn))
+    if not (np.isfinite(peak) and peak > 0.0):
+        return 0.0
+    bg = np.asarray(pw_bg, dtype=float)
+    bg = bg[np.isfinite(bg)]
+    if len(bg) >= 20:
+        # Use ONLY the off-window broadband background (which excludes [p_lo, p_hi]) so strong
+        # transit peaks and sidelobes in the +-1.5% fine grid cannot inflate their own noise floor.
+        mp_ref = float(np.median(bg))
+        mad_ref = max(1.4826 * float(np.median(np.abs(bg - mp_ref))), 1e-6)
+    else:
+        # Fallback when broadband background is unavailable: mask top-10% peak lobe in fine grid.
+        q_cut = float(np.quantile(fn, 0.90))
+        wings = fn[fn <= q_cut]
+        ref = wings if len(wings) >= 10 else fn
+        mp_ref = float(np.median(ref))
+        mad_ref = max(1.4826 * float(np.median(np.abs(ref - mp_ref))), 1e-6)
+    sde = float((peak - mp_ref) / mad_ref)
+    return sde if np.isfinite(sde) else 0.0
 
 
 def stack_clean(raw: list[dict], win_s: float, pol_d: float):
@@ -43,33 +70,54 @@ def stack_clean(raw: list[dict], win_s: float, pol_d: float):
 
 def coherent_planet_bls(t, f, fe, pc: float, rs: float):
     from astropy.timeseries import BoxLeastSquares
-    fb = float(t[-1] - t[0]) if len(t) >= 100 else 0.0
+    if not (np.isfinite(pc) and pc > 0 and np.isfinite(rs) and rs > 0):
+        return None
+    t, f, fe = np.asarray(t, float), np.asarray(f, float), np.asarray(fe, float)
+    valid = np.isfinite(t) & np.isfinite(f) & np.isfinite(fe) & (fe > 0)
+    t, f, fe = t[valid], f[valid], fe[valid]
+    if len(t) < 100:
+        return None
+    o = np.argsort(t); t, f, fe = t[o], f[o], fe[o]
+    fb = float(t[-1] - t[0])
     p_lo, p_hi = 0.985 * pc, min(1.015 * pc, fb / 1.65)
     if fb < 1.32 * pc or p_hi <= p_lo * 1.001:
         return None
     d0 = max(0.020, 0.40 * exp_dur(pc, rs))
     durs = np.geomspace(d0, min(0.35 * p_lo, max(d0 * 1.25, 1.75 * exp_dur(pc, rs))), 7)
-    bls = BoxLeastSquares(t, f, dy=fe)
-    bg_lo, bg_hi = max(0.75, 0.42 * pc), min(34.0, fb / 1.65)
-    p_bg = 1.0 / np.linspace(1.0 / max(bg_hi, bg_lo * 1.2), 1.0 / bg_lo, 2800)[::-1]
-    vd = durs[durs < 0.85 * float(np.min(p_bg))]
-    r_bg = bls.power(p_bg, vd if len(vd) else [0.12 * bg_lo], objective="snr")
-    pw_bg = np.where(np.asarray(r_bg.depth) > 0, np.asarray(r_bg.power, float), 0.0)
-    mp_b = float(np.nanmedian(pw_bg)); mad_b = max(1.4826 * float(np.nanmedian(np.abs(pw_bg - mp_b))), 1e-6)
-    p_fn = 1.0 / np.linspace(1.0 / p_hi, 1.0 / p_lo, 12000)[::-1]
     vdf = durs[durs < 0.85 * p_lo]
-    r_fn = bls.power(p_fn, vdf if len(vdf) else [0.12 * p_lo], objective="snr")
-    pw_f = np.where(np.asarray(r_fn.depth) > 0, np.asarray(r_fn.power, float), 0.0)
+    durs_use = vdf if len(vdf) else np.array([0.12 * p_lo], dtype=float)
+    bls = BoxLeastSquares(t, f, dy=fe)
+    bg_lo = max(0.75, 0.42 * pc, float(np.max(durs_use)) / 0.84)
+    bg_hi = min(34.0, fb / 1.65)
+    pw_bg = np.array([], dtype=float)
+    if bg_hi > bg_lo * 1.05:
+        p_bg = 1.0 / np.linspace(1.0 / bg_hi, 1.0 / bg_lo, 2800)[::-1]
+        p_bg = p_bg[(p_bg < p_lo) | (p_bg > p_hi)]
+        if len(p_bg) >= 20:
+            r_bg = bls.power(p_bg, durs_use, objective="snr")
+            pw_bg = np.where(np.isfinite(r_bg.depth) & (np.asarray(r_bg.depth) > 0) & np.isfinite(r_bg.power), np.asarray(r_bg.power, float), 0.0)
+    p_fn = 1.0 / np.linspace(1.0 / p_hi, 1.0 / p_lo, 12000)[::-1]
+    r_fn = bls.power(p_fn, durs_use, objective="snr")
+    pw_f = np.where(np.isfinite(r_fn.depth) & (np.asarray(r_fn.depth) > 0) & np.isfinite(r_fn.power), np.asarray(r_fn.power, float), 0.0)
+    if len(pw_f) == 0 or not np.any(pw_f > 0):
+        return None
     bi = int(np.nanargmax(pw_f)); bp, bt0, bdur = float(r_fn.period[bi]), float(r_fn.transit_time[bi]), float(r_fn.duration[bi])
+    if not (np.isfinite(bp) and bp > 0 and np.isfinite(bt0) and np.isfinite(bdur) and bdur > 0):
+        return None
     st = bls.compute_stats(bp, bdur, bt0)
     ph = ((t - bt0 + 0.5 * bp) % bp) - 0.5 * bp; it, ot = np.abs(ph) <= 0.5 * bdur, np.abs(ph) > 1.25 * bdur
     ntr = int(np.sum(np.asarray(st["per_transit_count"]) >= 2)) or int(np.sum(np.asarray(st["per_transit_count"]) >= 1))
     if np.sum(it) < 4 or np.sum(ot) < 30 or ntr < 2:
         return None
     dep = float(np.median(f[ot]) - np.mean(f[it]))
-    if dep <= 0:
+    if not (np.isfinite(dep) and dep > 0):
         return None
     sc = max(1.4826 * float(np.median(np.abs(f[ot] - np.median(f[ot])))), 1e-6)
     mes = dep / (sc * math.sqrt(1.0 / int(np.sum(it)) + 1.0 / int(np.sum(ot))))
+    beta = max(1.0, float(pont_beta(t[ot], f[ot] - np.median(f[ot]), bdur)))
+    mes_c = mes / beta
+    sde = calibrated_bls_sde(pw_bg, pw_f)
+    if not (np.isfinite(mes) and np.isfinite(mes_c) and np.isfinite(sde)):
+        return None
     return {"p": bp, "t0": bt0, "dur": bdur, "dep": dep, "sc": sc, "mes": mes,
-            "mes_c": mes / pont_beta(t[ot], f[ot] - np.median(f[ot]), bdur), "sde": float((np.nanmax(pw_f) - mp_b) / mad_b), "ntr": ntr}
+            "mes_c": mes_c, "sde": sde, "ntr": ntr}

@@ -20,7 +20,8 @@ def load_multi(tid: int, ra: float, dec: float):
         want = [s for s in sorted({alls[i] for i in [0, min(1, n - 1), n // 3, (2 * n) // 3, max(0, n - 2), n - 1]}) if s not in have][:6]
         with cf.ThreadPoolExecutor(max_workers=3) as ex:
             for r in ex.map(lambda s: ffi_cutout_lc(tid, ra, dec, s), want):
-                if r: raw.append({**r, "sap": r["f"].copy(), "crowd": 0.92})
+                if r:
+                    raw.append({**r, "sap": np.full(len(r["f"]), np.nan, dtype=float), "crowd": np.nan})
     return sorted(raw, key=lambda x: x["sec"]), alls
 
 
@@ -30,21 +31,41 @@ def stack_dual(raw: list[dict], win_s: float, pol_d: float):
         for l in raw:
             a, b, c, *rest = harmonic_despot(l["t"], l["f"], l["fe"], l["q"], polish_d=pol_d) if dsp_mode else (*detrend_lc(l["t"], l["f"], l["fe"], l["q"], win_s), None)
             if len(a) >= 60:
-                im = np.clip(np.searchsorted(l["t"], a), 0, len(l["t"]) - 1)
+                lt = np.asarray(l["t"], dtype=float)
+                lv = np.isfinite(lt)
+                if np.any(lv):
+                    idx_v = np.flatnonzero(lv)
+                    ord_v = idx_v[np.argsort(lt[idx_v])]
+                    im = ord_v[np.clip(np.searchsorted(lt[ord_v], a), 0, len(ord_v) - 1)]
+                else:
+                    im = np.zeros(len(a), dtype=int)
                 ta.append(a); fa.append(b); fea.append(c); sa.append(np.full(len(a), l["sec"], int))
-                sapa.append(l["sap"][im]); mxa.append(l["mdx"][im]); mya.append(l["mdy"][im]); crs.append(l["crowd"])
+                sapa.append(np.asarray(l["sap"], dtype=float)[im])
+                mxa.append(np.asarray(l["mdx"], dtype=float)[im])
+                mya.append(np.asarray(l["mdy"], dtype=float)[im])
+                cr = float(l.get("crowd", np.nan))
+                if np.isfinite(cr) and 0.0 < cr <= 1.0:
+                    crs.append(cr)
                 if rest[0]: infs.append(rest[0])
         if not ta: return None
         sc = np.concatenate(sa)
         return {"t": np.concatenate(ta), "f": np.concatenate(fa), "fe": np.concatenate(fea), "sec": sc,
                 "sap": norm_sap(np.concatenate(sapa), sc), "mdx": np.concatenate(mxa), "mdy": np.concatenate(mya),
-                "crowd": float(np.median(crs)) if crs else 0.95, "infs": infs}
+                "crowd": float(np.median(crs)) if crs else float("nan"), "infs": infs}
     return _cat(False), _cat(True)
 
 
 def coherent_seed_bls(t, f, fe, pc: float, rs: float):
     from astropy.timeseries import BoxLeastSquares
-    if len(t) < 120 or (t[-1] - t[0]) < 1.35 * pc: return None
+    if not (np.isfinite(pc) and pc > 0 and np.isfinite(rs) and rs > 0):
+        return None
+    t, f, fe = np.asarray(t, float), np.asarray(f, float), np.asarray(fe, float)
+    valid = np.isfinite(t) & np.isfinite(f) & np.isfinite(fe) & (fe > 0)
+    t, f, fe = t[valid], f[valid], fe[valid]
+    if len(t) < 120:
+        return None
+    o = np.argsort(t); t, f, fe = t[o], f[o], fe[o]
+    if (t[-1] - t[0]) < 1.35 * pc: return None
     p_lo, p_hi = 0.982 * pc, min(1.018 * pc, float(t[-1] - t[0]) / 1.8)
     if p_hi <= p_lo * 1.002: return None
     d0 = max(0.018, 0.38 * exp_dur(pc, rs))
@@ -52,20 +73,28 @@ def coherent_seed_bls(t, f, fe, pc: float, rs: float):
     bls = BoxLeastSquares(t, f, dy=fe)
     ps = bls.autoperiod(durs, minimum_period=p_lo, maximum_period=p_hi, frequency_factor=2.5)
     if len(ps) > 48000: ps = 1.0 / np.linspace(1.0 / p_hi, 1.0 / p_lo, 48000)[::-1]
-    res = bls.power(ps, durs[durs < 0.85 * p_lo], objective="snr")
-    pw = np.where(np.asarray(res.depth) > 0, np.asarray(res.power, float), 0.0)
+    vdf = durs[durs < 0.85 * p_lo]
+    res = bls.power(ps, vdf if len(vdf) else [0.12 * p_lo], objective="snr")
+    pw = np.where(np.isfinite(res.depth) & (np.asarray(res.depth) > 0) & np.isfinite(res.power), np.asarray(res.power, float), 0.0)
+    if len(pw) == 0 or not np.any(pw > 0):
+        return None
     bi = int(np.nanargmax(pw)); mp = float(np.nanmedian(pw))
     sde = float((np.nanmax(pw) - mp) / max(1.4826 * float(np.nanmedian(np.abs(pw - mp))), 1e-6))
     bp, bt0, bdur = float(res.period[bi]), float(res.transit_time[bi]), float(res.duration[bi])
+    if not (np.isfinite(bp) and bp > 0 and np.isfinite(bt0) and np.isfinite(bdur) and bdur > 0):
+        return None
     st = bls.compute_stats(bp, bdur, bt0)
     ph = ((t - bt0 + 0.5 * bp) % bp) - 0.5 * bp; it, ot = np.abs(ph) <= 0.5 * bdur, np.abs(ph) > 1.2 * bdur
     ntr = int(np.sum(np.asarray(st["per_transit_count"]) >= 2)) or int(np.sum(np.asarray(st["per_transit_count"]) >= 1))
     if np.sum(it) < 4 or np.sum(ot) < 30 or ntr < 2: return None
     dep = float(np.median(f[ot]) - np.mean(f[it]))
-    if dep <= 0: return None
+    if not (np.isfinite(dep) and dep > 0): return None
     sc = max(1.4826 * float(np.median(np.abs(f[ot] - np.median(f[ot])))), 1e-6)
     mes = dep / (sc * math.sqrt(1.0 / int(np.sum(it)) + 1.0 / int(np.sum(ot))))
-    mc = mes / pont_beta(t[ot], f[ot] - np.median(f[ot]), bdur)
+    beta = max(1.0, float(pont_beta(t[ot], f[ot] - np.median(f[ot]), bdur)))
+    mc = mes / beta
+    if not (np.isfinite(mes) and np.isfinite(mc) and np.isfinite(sde)):
+        return None
     return {"p": bp, "t0": bt0, "dur": bdur, "dep": dep, "sc": sc, "mes": mes, "mes_c": mc, "sde": sde, "ntr": ntr, "stats": st}
 
 
@@ -105,4 +134,5 @@ def audit_target(tid: int, pc: float, lane: str, tr, hits: list[dict], kt: set, 
             "P_fit_d": rep["P_d"] if rep else -1.0, "depth_ppm": rep["depth_ppm"] if rep else 0.0, "Rp_Re": rep["Rp_Re"] if rep else -1.0, "Teq_K": rep["Teq_K"] if rep else -1.0,
             "wcs_off_as": wr.get("off_target_as", -1.0), "plausible_bebs": wr.get("plausible_nbs", -1), "wcs_verdict": wr.get("verdict", "NONE"),
             "blind_alt_P_d": repa["P_d"] if repa else -1.0, "blind_alt_MES": repa["MES"] if repa else 0.0, "blind_alt_passed": bool(repa and repa["passed"]),
-            "survived_hz_planet": bool(rep and rep["passed"]), "vetoes": rep["vetoes"] if rep else "no_multi_sector_dip"}
+            "survived_hz_planet": bool(rep and rep["passed"]), "vetoes": rep["vetoes"] if rep else "no_multi_sector_dip",
+            "notes": rep.get("notes", "NONE") if rep else "NONE"}

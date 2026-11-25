@@ -15,22 +15,45 @@ from mast_data import gaia_nb, index_mast_sectors, load_catalogs, stack_tic, tpf
 from vetter import vet_signal
 
 def norm_sap(sap, sec):
-    out = np.ones_like(sap, dtype=float)
-    for s in np.unique(sec):
-        m = (sec == s) & np.isfinite(sap) & (sap > 0)
-        if np.sum(m) < 30: continue
-        sm = sap[m] / float(np.median(sap[m])); k = min(int(np.sum(m)) - (1 - int(np.sum(m)) % 2), 301)
+    sap_arr = np.asarray(sap, dtype=float)
+    sec_arr = np.asarray(sec)
+    if sap_arr.shape != sec_arr.shape:
+        raise ValueError(f"norm_sap length mismatch: sap={sap_arr.shape}, sec={sec_arr.shape}")
+    out = np.full(sap_arr.shape, np.nan, dtype=float)
+    for s in np.unique(sec_arr):
+        m = (sec_arr == s) & np.isfinite(sap_arr) & (sap_arr > 0)
+        n_ok = int(np.sum(m))
+        if n_ok < 30:
+            continue
+        med = float(np.median(sap_arr[m]))
+        if not (np.isfinite(med) and med > 0):
+            continue
+        sm = sap_arr[m] / med
+        k = min(n_ok - (1 - n_ok % 2), 301)
         out[m] = sm / np.maximum(signal.medfilt(sm, kernel_size=max(21, k | 1)), 0.2)
     return out
 
 def spot_amp(t, f, p, t0, dur):
-    ph = ((t - t0 + 0.5 * p) % p) - 0.5 * p; ot = np.abs(ph) > 1.3 * dur
-    if np.sum(ot) < 60: return 0.0
-    a = 2.0 * np.pi * (t[ot] - t0) / p
-    X = np.column_stack([np.ones(np.sum(ot)), np.cos(a), np.sin(a), np.cos(2 * a), np.sin(2 * a)])
-    c, *_ = np.linalg.lstsq(X, f[ot] - np.median(f[ot]), rcond=None); g = np.linspace(0, 2 * np.pi, 120)
+    if not (np.isfinite(p) and p > 0 and np.isfinite(t0) and np.isfinite(dur) and dur >= 0):
+        return math.inf
+    t_arr, f_arr = np.asarray(t, dtype=float), np.asarray(f, dtype=float)
+    if t_arr.shape != f_arr.shape:
+        return math.inf
+    valid = np.isfinite(t_arr) & np.isfinite(f_arr)
+    t_arr, f_arr = t_arr[valid], f_arr[valid]
+    ph = ((t_arr - t0 + 0.5 * p) % p) - 0.5 * p
+    ot = np.abs(ph) > 1.3 * dur
+    if int(np.sum(ot)) < 60:
+        return 0.0
+    a = 2.0 * np.pi * (t_arr[ot] - t0) / p
+    X = np.column_stack([np.ones(int(np.sum(ot))), np.cos(a), np.sin(a), np.cos(2 * a), np.sin(2 * a)])
+    c, *_ = np.linalg.lstsq(X, f_arr[ot] - np.median(f_arr[ot]), rcond=None)
+    if not np.all(np.isfinite(c)):
+        return math.inf
+    g = np.linspace(0, 2 * np.pi, 120)
     m = c[1] * np.cos(g) + c[2] * np.sin(g) + c[3] * np.cos(2 * g) + c[4] * np.sin(2 * g)
-    return float(np.max(m) - np.min(m))
+    amp = float(np.max(m) - np.min(m))
+    return amp if np.isfinite(amp) else math.inf
 
 def save_card(out_p, tic, tag, p_d, t0_bt, dur_d, dep_ppm, t, f, sec, tpf=None):
     out_p.parent.mkdir(parents=True, exist_ok=True)

@@ -39,6 +39,7 @@ jobs:
           test -f results/hz_issue5_audit.csv
 
       - name: Commit Issue 5 empirical ledger, plots, and SHA-256 certificates
+        if: github.ref == 'refs/heads/main'
         run: |
           rm -rf _eumemic .venv
           git config user.name "orda-aska"
