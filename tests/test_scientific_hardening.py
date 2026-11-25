@@ -142,6 +142,12 @@ def _ensure_optional_stubs() -> None:
             )
 
 
+try:
+    importlib.import_module("astropy.timeseries")
+    _HAS_REAL_ASTROPY = True
+except ImportError:
+    _HAS_REAL_ASTROPY = False
+
 _ensure_optional_stubs()
 
 import cool_io  # noqa: E402
@@ -215,8 +221,9 @@ class MdwarfHuntHardeningTest(unittest.TestCase):
 
         for bad_p, bad_t0, bad_dur in ((0.0, 0.0, 0.05), (-2.0, 0.0, 0.05), (math.nan, 0.0, 0.05), (3.5, math.nan, 0.05), (3.5, 0.0, -0.1)):
             with self.subTest(p=bad_p, t0=bad_t0, dur=bad_dur):
-                with self.assertRaises(ValueError):
-                    mdwarf_hunt.spot_amp(t, f, bad_p, bad_t0, bad_dur)
+                # Batch-safe fail-closed: returns math.inf (rejected by amp > 0.48*dep without aborting batch).
+                self.assertEqual(mdwarf_hunt.spot_amp(t, f, bad_p, bad_t0, bad_dur), math.inf)
+        self.assertEqual(mdwarf_hunt.spot_amp(t, f[:-1], 3.5, 0.0, 0.08), math.inf)
 
 
 class HzCoreAndCoolIoHardeningTest(unittest.TestCase):
@@ -242,7 +249,7 @@ class HzCoreAndCoolIoHardeningTest(unittest.TestCase):
         std, _ = hz_core.stack_dual(raw, 1.5, 1.2)
         self.assertIsNotNone(std)
         self.assertTrue(np.all(np.isnan(std["sap"])))
-        self.assertEqual(std["crowd"], 1.0)
+        self.assertTrue(np.isnan(std["crowd"]))
 
     def test_cool_io_load_cycles_ffi_marks_sap_and_crowd_nan(self):
         t = np.linspace(1500.0, 1525.0, 150)
@@ -263,21 +270,45 @@ class HzCoreAndCoolIoHardeningTest(unittest.TestCase):
         self.assertTrue(np.all(np.isnan(raw[0]["sap"])))
         self.assertTrue(np.isnan(raw[0]["crowd"]))
 
-    def test_calibrated_bls_sde_blocks_coarse_vs_fine_inflation_and_nan(self):
-        # Coarse grid baseline artificially lower/narrower than fine grid baseline:
-        # uncalibrated (7.0 - 1.0) / 0.5 = 12.0 (false positive); calibrated must use max(med) & max(mad) -> 2.0.
+    def test_calibrated_bls_sde_uses_broadband_reference_and_recovers_real_bls_transits(self):
+        # 1. Synthetic unit check: a strong transit peak lobe inside the +-1.5% fine window
+        #    raises pw_fn median/MAD, which MUST NOT suppress SDE when off-window pw_bg is present.
         pw_bg = np.array([1.0 - 0.5 / 1.4826, 1.0, 1.0 + 0.5 / 1.4826] * 100)
-        pw_fn = np.concatenate([
-            np.array([4.0 - 1.5 / 1.4826, 4.0, 4.0 + 1.5 / 1.4826] * 100),
-            np.array([7.0]),
+        pw_fn_strong = np.concatenate([
+            np.array([8.0 - 3.0 / 1.4826, 8.0, 8.0 + 3.0 / 1.4826] * 100),
+            np.array([25.0]),
         ])
-        sde = cool_io.calibrated_bls_sde(pw_bg, pw_fn)
-        self.assertLess(sde, 3.0)
-        self.assertAlmostEqual(sde, 2.0, delta=0.1)
+        sde_bg = cool_io.calibrated_bls_sde(pw_bg, pw_fn_strong)
+        self.assertAlmostEqual(sde_bg, (25.0 - 1.0) / 0.5, delta=0.1)
+
+        # Fallback without broadband background masks top-10% peak lobe instead of letting the peak crush SDE.
+        pw_fn_only = np.concatenate([np.full(90, 1.0) + np.tile([-0.2, 0.0, 0.2], 30), np.linspace(5.0, 20.0, 10)])
+        self.assertGreater(cool_io.calibrated_bls_sde([], pw_fn_only), 15.0)
 
         # All-NaN or non-positive fine power fails closed to 0.0.
         self.assertEqual(cool_io.calibrated_bls_sde(pw_bg, np.full(20, np.nan)), 0.0)
         self.assertEqual(cool_io.calibrated_bls_sde(pw_bg, np.zeros(20)), 0.0)
+
+        # 2. Real astropy BoxLeastSquares null-vs-injection recovery check (runs whenever astropy is installed).
+        if _HAS_REAL_ASTROPY:
+            rng_null = np.random.default_rng(101)
+            t = np.linspace(1500.0, 1554.0, 4000)
+            fe = np.full(len(t), 3e-4)
+            f_null = 1.0 + rng_null.normal(0.0, 3e-4, len(t))
+            res_null = cool_io.coherent_planet_bls(t, f_null, fe, 3.3, 0.55)
+            if res_null is not None:
+                self.assertLess(res_null["sde"], 6.0, f"null noise falsely cleared SDE gate: {res_null['sde']}")
+
+            for depth_ppm in (300.0, 1000.0, 2000.0, 5000.0):
+                with self.subTest(depth_ppm=depth_ppm):
+                    rng = np.random.default_rng(int(depth_ppm) + 7)
+                    f_inj = 1.0 + rng.normal(0.0, 3e-4, len(t))
+                    ph = ((t - 1501.1 + 0.5 * 3.3) % 3.3) - 0.5 * 3.3
+                    f_inj[np.abs(ph) <= 0.04] -= depth_ppm * 1e-6
+                    res_inj = cool_io.coherent_planet_bls(t, f_inj, fe, 3.3, 0.55)
+                    self.assertIsNotNone(res_inj)
+                    self.assertGreater(res_inj["sde"], 8.0, f"depth={depth_ppm} ppm crushed to SDE={res_inj['sde']}")
+                    self.assertAlmostEqual(res_inj["p"], 3.3, delta=0.01)
 
     def test_coherent_bls_guards_invalid_inputs_and_matches_duration_grids(self):
         t, f, fe, _ = _make_synthetic_lc(period=4.0, t0=1501.0, depth=0.002, dur=0.08, sectors=(12, 13))
@@ -358,10 +389,11 @@ class TtvTrackHardeningTest(unittest.TestCase):
     def test_fit_ephemeris_and_extract_reject_nan_and_degenerate_inputs(self):
         self.assertEqual(ttv_track.extract_transit_times([], -1.0, 1500.0, 0.08), ([], []))
         self.assertEqual(ttv_track.extract_transit_times([], math.nan, 1500.0, 0.08), ([], []))
-        with self.assertRaises(ValueError):
-            ttv_track.fit_ephemeris_models([], [], 0.0, 1500.0)
-        with self.assertRaises(ValueError):
-            ttv_track.fit_ephemeris_models([], [], math.nan, 1500.0)
+        for bad_p, bad_t0 in ((0.0, 1500.0), (math.nan, 1500.0), (2.5, math.nan)):
+            inv = ttv_track.fit_ephemeris_models([], [], bad_p, bad_t0)
+            self.assertEqual(inv["class"], "INSUFFICIENT_EPOCHS")
+            self.assertEqual(inv["source"], "invalid")
+            self.assertTrue(np.isfinite(inv["P_ref"]) and np.isfinite(inv["T0_ref_BJD"]))
 
         # NaN rows and identical epochs must return INSUFFICIENT_EPOCHS cleanly without NaN propagation.
         bad_rows = [
@@ -405,17 +437,22 @@ class ReportV3DeterminismTest(unittest.TestCase):
             c2 = json.loads((p2 / "convergence_certificates.json").read_text(encoding="utf-8"))
             self.assertEqual(c1["files_sha256"], c2["files_sha256"])
             self.assertEqual(c1["manifest_sha256"], c2["manifest_sha256"])
+            self.assertEqual(c1["code_sha256"], c2["code_sha256"])
             self.assertEqual(c1["manifest_sha256"], report_v3.canonical_files_digest(c1["files_sha256"]))
             self.assertEqual(
                 c1["files_sha256"]["CONVERGENCE_REPORT.md"],
                 hashlib.sha256(md1).hexdigest(),
             )
 
-            # NaN in benchmark must fail closed (allow_nan=False).
+            # NaN in benchmark must fail closed BEFORE writing CSV/MD/JSON (leaving existing files intact).
+            prev_md = (p1 / "CONVERGENCE_REPORT.md").read_bytes()
+            prev_cert = (p1 / "convergence_certificates.json").read_bytes()
             bad_bench = dict(bench, despotted_MES=float("nan"))
             with self.assertRaises(ValueError):
                 with contextlib.redirect_stdout(io.StringIO()):
                     report_v3.save_phase3_outputs(p1, p1 / "figures", 1000.0, 108, bad_bench, cat_a, plat, [], [], [], [], [], [])
+            self.assertEqual((p1 / "CONVERGENCE_REPORT.md").read_bytes(), prev_md)
+            self.assertEqual((p1 / "convergence_certificates.json").read_bytes(), prev_cert)
 
 
 class VetterHardeningTest(unittest.TestCase):
@@ -456,6 +493,36 @@ class VetterHardeningTest(unittest.TestCase):
         self.assertGreater(rep["NFPP"], 0.0020)
         self.assertNotEqual(rep["tier"], "Tier S-Val")
         self.assertEqual(rep["tier"], "Tier N")
+
+    def test_nan_neighbor_and_missing_sap_crowdsap_fail_closed(self):
+        t, f, fe, sec = _make_synthetic_lc(period=2.45, t0=1500.4, depth=0.0012, dur=0.07, sectors=(12, 106), noise=1.5e-4)
+        pk = self._clean_pk(period=2.45, t0=1500.4, dur=0.07, dep=0.0012, mes=22.0, mes_c=18.0, sde=15.0)
+        with mock.patch.object(vetter, "search_bls", return_value=None):
+            # 1. Missing CROWDSAP (NaN) and all-NaN SAP must emit no_crowdsap + no_sap notes and cap below Tier S-Val.
+            rep_ffi = vetter.vet_signal(
+                104, pk, t, f, fe, sec, "TEST_FFI",
+                sap=np.full(len(f), np.nan),
+                crowd=math.nan,
+                meta={"rstar": 0.55, "teff": 4000, "tmag": 11.0, "ruwe": 1.0},
+            )
+            self.assertTrue(rep_ffi["passed"])
+            self.assertIn("no_crowdsap", rep_ffi["notes"])
+            self.assertIn("no_sap", rep_ffi["notes"])
+            self.assertEqual(rep_ffi["tier"], "Tier S")
+
+            # 2. Neighbor with NaN separation or NaN tmag must NOT be silently skipped (fail-closed -> Tier N, NFPP > 0.002).
+            for bad_nb in ([{"sep_arcsec": math.nan, "tmag": 12.0}], [{"sep_arcsec": 5.0, "tmag": math.nan}]):
+                with self.subTest(bad_nb=bad_nb):
+                    rep_nb = vetter.vet_signal(
+                        105, pk, t, f, fe, sec, "TEST_NB",
+                        sap=f.copy(),
+                        crowd=0.98,
+                        meta={"rstar": 0.55, "teff": 4000, "tmag": 11.0, "ruwe": 1.0},
+                        nbs=bad_nb,
+                    )
+                    self.assertGreater(rep_nb["NFPP"], 0.0020)
+                    self.assertEqual(rep_nb["tier"], "Tier N")
+                    self.assertIn("unknown_neighbor_meta", rep_nb["notes"])
 
     def test_blind_check_sector_requires_two_epochs_applies_pont_beta_and_guards_nan(self):
         # 1. Single-epoch dip (P = 22.98 d in a 25-day sector -> n_cov == 1) must NOT be CONFIRMED_ON_SCHEDULE.

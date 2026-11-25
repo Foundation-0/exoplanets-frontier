@@ -51,7 +51,7 @@ def stack_dual(raw: list[dict], win_s: float, pol_d: float):
         sc = np.concatenate(sa)
         return {"t": np.concatenate(ta), "f": np.concatenate(fa), "fe": np.concatenate(fea), "sec": sc,
                 "sap": norm_sap(np.concatenate(sapa), sc), "mdx": np.concatenate(mxa), "mdy": np.concatenate(mya),
-                "crowd": float(np.median(crs)) if crs else 1.0, "infs": infs}
+                "crowd": float(np.median(crs)) if crs else float("nan"), "infs": infs}
     return _cat(False), _cat(True)
 
 
@@ -134,4 +134,5 @@ def audit_target(tid: int, pc: float, lane: str, tr, hits: list[dict], kt: set, 
             "P_fit_d": rep["P_d"] if rep else -1.0, "depth_ppm": rep["depth_ppm"] if rep else 0.0, "Rp_Re": rep["Rp_Re"] if rep else -1.0, "Teq_K": rep["Teq_K"] if rep else -1.0,
             "wcs_off_as": wr.get("off_target_as", -1.0), "plausible_bebs": wr.get("plausible_nbs", -1), "wcs_verdict": wr.get("verdict", "NONE"),
             "blind_alt_P_d": repa["P_d"] if repa else -1.0, "blind_alt_MES": repa["MES"] if repa else 0.0, "blind_alt_passed": bool(repa and repa["passed"]),
-            "survived_hz_planet": bool(rep and rep["passed"]), "vetoes": rep["vetoes"] if rep else "no_multi_sector_dip"}
+            "survived_hz_planet": bool(rep and rep["passed"]), "vetoes": rep["vetoes"] if rep else "no_multi_sector_dip",
+            "notes": rep.get("notes", "NONE") if rep else "NONE"}

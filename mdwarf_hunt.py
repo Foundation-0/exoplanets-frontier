@@ -35,10 +35,10 @@ def norm_sap(sap, sec):
 
 def spot_amp(t, f, p, t0, dur):
     if not (np.isfinite(p) and p > 0 and np.isfinite(t0) and np.isfinite(dur) and dur >= 0):
-        raise ValueError(f"spot_amp requires finite p>0, t0, dur>=0; got p={p}, t0={t0}, dur={dur}")
+        return math.inf
     t_arr, f_arr = np.asarray(t, dtype=float), np.asarray(f, dtype=float)
     if t_arr.shape != f_arr.shape:
-        raise ValueError(f"spot_amp length mismatch: t={t_arr.shape}, f={f_arr.shape}")
+        return math.inf
     valid = np.isfinite(t_arr) & np.isfinite(f_arr)
     t_arr, f_arr = t_arr[valid], f_arr[valid]
     ph = ((t_arr - t0 + 0.5 * p) % p) - 0.5 * p

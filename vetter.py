@@ -20,7 +20,7 @@ def vet_signal(tic, pk, t, f, fe, sec, lane, sap=None, mdx=None, mdy=None, crowd
                 "depth_ppm": 0.0, "err_ppm": 0.0, "dur_h": 0.0, "Rp_Re": -1.0, "MES": 0.0, "SDE": 0.0, "n_tr": int(pk.get("ntr", 0)),
                 "n_sec": 0, "oe_sig": 0.0, "cent_as": 0.0, "ruwe": round(ruwe, 3) if np.isfinite(ruwe) else -1.0,
                 "Teff": round(teff, 0), "Rstar": round(rs, 3), "Tmag": round(tmag, 2), "Teq_K": -1.0, "TSM": 0.0,
-                "FPP": 0.99, "NFPP": 0.99, "passed": False, "tier": "rejected", "vetoes": "invalid_signal"}
+                "FPP": 0.99, "NFPP": 0.99, "passed": False, "tier": "rejected", "vetoes": "invalid_signal", "notes": "NONE"}
     t, f, fe, sec = np.asarray(t, float), np.asarray(f, float), np.asarray(fe, float), np.asarray(sec)
     vf = np.isfinite(t) & np.isfinite(f) & np.isfinite(fe)
     if sap is not None and len(sap) == len(vf): sap = np.asarray(sap, float)[vf]
@@ -33,8 +33,12 @@ def vet_signal(tic, pk, t, f, fe, sec, lane, sap=None, mdx=None, mdy=None, crowd
                 "n_tr": int(pk.get("ntr", 0)), "n_sec": 0, "oe_sig": 0.0, "cent_as": 0.0,
                 "ruwe": round(ruwe, 3) if np.isfinite(ruwe) else -1.0, "Teff": round(teff, 0), "Rstar": round(rs, 3),
                 "Tmag": round(tmag, 2), "Teq_K": -1.0, "TSM": 0.0, "FPP": 0.99, "NFPP": 0.99,
-                "passed": False, "tier": "rejected", "vetoes": "invalid_signal"}
-    cs = float(np.clip(crowd if np.isfinite(crowd) and crowd > 0 else 1.0, 0.15, 1.0))
+                "passed": False, "tier": "rejected", "vetoes": "invalid_signal", "notes": "NONE"}
+    notes = []
+    has_crowd = bool(np.isfinite(crowd) and 0.0 < crowd <= 1.0)
+    if not has_crowd:
+        notes.append("no_crowdsap")
+    cs = float(np.clip(crowd if has_crowd else 1.0, 0.15, 1.0))
     rp = math.sqrt(dep / cs) * rs * RSUN_RE; drt = dur / max(exp_dur(p, rs), 1e-3); vet = []
     if not (np.isfinite(mes_c) and mes_c >= 9.5): vet.append(f"low_mes({mes_c:.1f})")
     if not (np.isfinite(sde_v) and sde_v >= 7.5): vet.append(f"low_sde({sde_v:.1f})")
@@ -66,13 +70,17 @@ def vet_signal(tic, pk, t, f, fe, sec, lane, sap=None, mdx=None, mdy=None, crowd
     usec = np.unique(sec[it])
     if len(usec) < 2: vet.append("1_sector")
 
+    sap_checked = False
     if sap is not None and len(sap) == len(f):
         vs = np.isfinite(sap) & (sap > 0)
         if np.sum(vs & it) >= 5 and np.sum(vs & ot) >= 30:
+            sap_checked = True
             los = vs & (np.abs(ph) > 1.2 * dur) & (np.abs(ph) <= min(3.5 * dur, 0.45 * p))
             if np.sum(los) < 15: los = vs & ot
             ms = float(np.median(sap[los])); ds = (ms - float(np.mean(sap[vs & it]))) / max(ms, 1e-6)
             if dep > 0 and ds > 0 and not (0.25 <= (ds / cs) / dep <= 2.6): vet.append("sap_mismatch")
+    if not sap_checked:
+        notes.append("no_sap")
 
     ca = csig = 0.0
     if mdx is not None and mdy is not None and len(mdx) == len(f):
@@ -95,8 +103,19 @@ def vet_signal(tic, pk, t, f, fe, sec, lane, sap=None, mdx=None, mdy=None, crowd
 
     cnb, close_beb, nfpp, effc = 0, False, 0.0, (tpf_off if tpf_off >= 0 else ca)
     for nb in (nbs or []):
-        sp = float(nb.get("sep_arcsec", 99.0)); nb_tmag = float(nb.get("tmag", 18.0))
+        try:
+            sp = float(nb.get("sep_arcsec", 99.0))
+            nb_tmag = float(nb.get("tmag", 18.0))
+        except (TypeError, ValueError):
+            sp, nb_tmag = float("nan"), float("nan")
         if not (np.isfinite(sp) and sp >= 0.0 and np.isfinite(nb_tmag)):
+            # Fail-closed: neighbor with missing/NaN separation or magnitude cannot be ruled out;
+            # count as an unresolved close neighbor rather than ignoring it.
+            cnb += 1
+            close_beb = True
+            nfpp += 0.012 * 1.0 * 1.0 * 0.22
+            if "unknown_neighbor_meta" not in notes:
+                notes.append("unknown_neighbor_meta")
             continue
         ff = 10.0 ** (-0.4 * (nb_tmag - tmag)); pc = math.exp(-0.5 * (sp / 24.0) ** 2)
         if 0.5 * (ff * pc) / (1.0 + ff * pc) >= 0.7 * dep:
@@ -122,13 +141,14 @@ def vet_signal(tic, pk, t, f, fe, sec, lane, sap=None, mdx=None, mdy=None, crowd
     mp, sf = (max(0.15, rp ** 3.5), 0.190) if rp < 1.5 else (2.69 * (rp ** 0.93), 1.26)
     tsm = sf * ((rp ** 3) * teq / (mp * rs ** 2)) * (10.0 ** (-0.2 * (tmag - (0.75 if teff < 4200 else 0.45))))
     ok = len(vet) == 0
-    tier = "rejected" if not ok else ("Tier N" if (close_beb or (cnb > 0 and nfpp >= 0.001)) else ("Tier S-Val" if (fpp < 0.015 and nfpp < 0.001 and np.isfinite(mes_c) and mes_c >= 10.0) else "Tier S"))
+    corroborated = has_crowd and sap_checked
+    tier = "rejected" if not ok else ("Tier N" if (close_beb or (cnb > 0 and nfpp >= 0.001)) else ("Tier S-Val" if (corroborated and fpp < 0.015 and nfpp < 0.001 and np.isfinite(mes_c) and mes_c >= 10.0) else "Tier S"))
     return {"tic": tic, "lane": lane, "P_d": round(p, 7), "T0_BJD": round(t0 + BTJD0, 6), "depth_ppm": round(dep * 1e6, 1),
             "err_ppm": round((sc / math.sqrt(max(int(np.sum(it)), 1))) * 1e6, 1), "dur_h": round(dur * 24.0, 2), "Rp_Re": round(rp, 2),
             "MES": round(mes_c, 2) if np.isfinite(mes_c) else 0.0, "SDE": round(sde_v, 1) if np.isfinite(sde_v) else 0.0, "n_tr": pk["ntr"], "n_sec": int(len(usec)), "oe_sig": round(oes, 2),
             "cent_as": round(effc, 1), "ruwe": round(ruwe, 3) if np.isfinite(ruwe) else -1.0, "Teff": round(teff, 0), "Rstar": round(rs, 3),
             "Tmag": round(tmag, 2), "Teq_K": round(teq, 0), "TSM": round(float(tsm), 1), "FPP": round(fpp, 5), "NFPP": round(nfpp, 5),
-            "passed": ok, "tier": tier, "vetoes": ";".join(vet) if vet else "CLEAN"}
+            "passed": ok, "tier": tier, "vetoes": ";".join(vet) if vet else "CLEAN", "notes": ";".join(notes) if notes else "NONE"}
 
 def blind_check_sector(tic, tier, p_d, t0_bjd, pred_ppm, dur_h, sec, t, f, mdx=None, mdy=None):
     if not (np.isfinite(p_d) and p_d > 0 and np.isfinite(t0_bjd) and np.isfinite(pred_ppm) and pred_ppm > 0 and np.isfinite(dur_h) and dur_h > 0):

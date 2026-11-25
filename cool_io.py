@@ -27,7 +27,7 @@ def load_cycles_1_to_8(tid: int, ra: float, dec: float):
 
 
 def calibrated_bls_sde(pw_bg, pw_fn) -> float:
-    """Compute conservative SDE calibrated across both broadband and fine grids."""
+    """Compute SDE using off-window broadband background (or off-peak fine wings fallback)."""
     fn = np.asarray(pw_fn, dtype=float)
     fn = fn[np.isfinite(fn)]
     if len(fn) == 0:
@@ -35,17 +35,20 @@ def calibrated_bls_sde(pw_bg, pw_fn) -> float:
     peak = float(np.max(fn))
     if not (np.isfinite(peak) and peak > 0.0):
         return 0.0
-    mp_f = float(np.median(fn))
-    mad_f = max(1.4826 * float(np.median(np.abs(fn - mp_f))), 1e-6)
     bg = np.asarray(pw_bg, dtype=float)
     bg = bg[np.isfinite(bg)]
     if len(bg) >= 20:
-        mp_b = float(np.median(bg))
-        mad_b = max(1.4826 * float(np.median(np.abs(bg - mp_b))), 1e-6)
-        mp_ref = max(mp_b, mp_f)
-        mad_ref = max(mad_b, mad_f, 1e-6)
+        # Use ONLY the off-window broadband background (which excludes [p_lo, p_hi]) so strong
+        # transit peaks and sidelobes in the +-1.5% fine grid cannot inflate their own noise floor.
+        mp_ref = float(np.median(bg))
+        mad_ref = max(1.4826 * float(np.median(np.abs(bg - mp_ref))), 1e-6)
     else:
-        mp_ref, mad_ref = mp_f, mad_f
+        # Fallback when broadband background is unavailable: mask top-10% peak lobe in fine grid.
+        q_cut = float(np.quantile(fn, 0.90))
+        wings = fn[fn <= q_cut]
+        ref = wings if len(wings) >= 10 else fn
+        mp_ref = float(np.median(ref))
+        mad_ref = max(1.4826 * float(np.median(np.abs(ref - mp_ref))), 1e-6)
     sde = float((peak - mp_ref) / mad_ref)
     return sde if np.isfinite(sde) else 0.0
 

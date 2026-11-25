@@ -63,7 +63,12 @@ def _valid_timing_rows(rows: list[dict]) -> list[dict]:
 
 def fit_ephemeris_models(sec_r: list[dict], ind_r: list[dict], p0: float, t0_btjd: float):
     if not (np.isfinite(p0) and p0 > 0 and np.isfinite(t0_btjd)):
-        raise ValueError(f"fit_ephemeris_models requires finite p0>0 and t0_btjd; got p0={p0}, t0_btjd={t0_btjd}")
+        return {"n_ep": 0, "source": "invalid",
+                "P_ref": round(float(p0), 7) if (np.isfinite(p0) and p0 > 0) else -1.0,
+                "T0_ref_BJD": round(float(t0_btjd) + BTJD0, 6) if np.isfinite(t0_btjd) else -1.0,
+                "dP_sec": 0.0, "rms0_m": 0.0, "rms_lin_m": 0.0,
+                "ttv_amp_m": 0.0, "ttv_sup_orb": 0.0, "dBIC_lin": 0.0,
+                "dBIC_quad": 0.0, "dBIC_ttv": 0.0, "class": "INSUFFICIENT_EPOCHS"}
     clean_ind = _valid_timing_rows(ind_r)
     clean_sec = _valid_timing_rows(sec_r)
     use_i = len(clean_ind) >= 6 and float(np.median([float(r["snr_peak"]) for r in clean_ind])) >= 3.6

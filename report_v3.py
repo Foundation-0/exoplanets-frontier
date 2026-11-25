@@ -24,11 +24,14 @@ def canonical_files_digest(files_sha256: dict[str, str]) -> str:
 
 
 def save_phase3_outputs(out_dir: Path, fig_d: Path, t0w: float, s_max: int, bench: dict, cat_rows: list, plat: list, ttv_r: list, ep_r: list, sib_r: list, blend_r: list, md_r: list, vpass: list):
+    el_s = round(time.time() - t0w, 1)
+    # Validate all JSON-serialized certificate payload fields BEFORE writing any CSV/MD/JSON to disk
+    # so a NaN/Inf benchmark fails atomically without writing "nan" reports or leaving a stale cert.
+    json.dumps({"elapsed_s": el_s, "s_max": s_max, "benchmark": bench}, sort_keys=True, allow_nan=False)
     out_dir.mkdir(parents=True, exist_ok=True)
     fig_d.mkdir(parents=True, exist_ok=True)
     for nm, rows in [("ttv_ephemeris_audit.csv", ttv_r), ("ttv_transit_epochs.csv", ep_r), ("sibling_residual_search.csv", sib_r), ("blend_localization.csv", blend_r), ("despotted_mdwarf_audit.csv", md_r), ("vetted_new_candidates.csv", vpass)]:
         pd.DataFrame(rows).to_csv(out_dir / nm, index=False)
-    el_s = round(time.time() - t0w, 1)
     cls_raw = pd.DataFrame(cat_rows)["dr4_class"].value_counts().to_dict() if cat_rows else {}
     cls_c = {str(k): int(v) for k, v in sorted(cls_raw.items())}
     hz_p = [r for r in plat if r["is_hz_temperate"]]
@@ -53,9 +56,16 @@ def save_phase3_outputs(out_dir: Path, fig_d: Path, t0w: float, s_max: int, benc
         fp.relative_to(out_dir).as_posix(): hashlib.sha256(fp.read_bytes()).hexdigest()
         for fp in artifact_paths
     }
+    code_dir = Path(__file__).resolve().parent
+    code_files_sha256 = {
+        fp.name: hashlib.sha256(fp.read_bytes()).hexdigest()
+        for fp in sorted(code_dir.glob("*.py"), key=lambda fp: fp.name)
+        if fp.is_file()
+    }
     certs = {"utc": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()), "elapsed_s": el_s, "s_max": s_max,
              "catalog_total": len(cat_rows), "platinum_gold_count": len(plat), "temperate_hz_clean_count": len(hz_p),
              "new_mdwarf_passed": len(vpass), "benchmark": bench,
+             "code_sha256": canonical_files_digest(code_files_sha256),
              "manifest_sha256": canonical_files_digest(files_sha256),
              "files_sha256": files_sha256}
     (out_dir / "convergence_certificates.json").write_text(
